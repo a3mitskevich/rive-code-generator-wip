@@ -261,7 +261,7 @@ static std::string sanitizeString(const std::string& input)
     return output;
 }
 
-static std::unique_ptr<rive::File> openFile(const char name[])
+static rive::rcp<rive::File> openFile(const char name[])
 {
     FILE* f = fopen(name, "rb");
     if (!f)
