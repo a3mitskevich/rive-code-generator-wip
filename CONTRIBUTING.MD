@@ -18,23 +18,59 @@ git submodule update --init --recursive
 
 ### Prerequisites
 
-- CMake (version 3.10 or higher)
 - C++ compiler with C++17 support
-- Rive C++ Runtime library
+- Rive C++ Runtime library (included as a git submodule)
+- `make` (or `ninja` if using the ninja build system)
+
+Premake5 is built from source automatically on first build.
 
 ### Building
 
-To build the debug version:
+Debug build:
 ```sh
 cd build && ./build.sh
 ```
 
-For the release version:
+Release build:
 ```sh
 cd build && ./build.sh release
 ```
 
-The executable will be created in `build/out/lib/debug` or `build/out/lib/release`.
+Clean build:
+```sh
+cd build && ./build.sh clean           # clean debug build
+cd build && ./build.sh release clean   # clean release build
+```
+
+Rebuild an existing output directory (reuses previous premake args):
+```sh
+cd build && ./build.sh rebuild out/debug
+```
+
+The executable will be created in `build/out/debug` or `build/out/release`.
+
+### Alternative Build Systems
+
+```sh
+cd build && ./build.sh ninja           # use ninja instead of make
+cd build && ./build.sh xcode           # generate and build an Xcode workspace
+```
+
+### IDE Integration (compile_commands.json)
+
+Generate `compile_commands.json` for clangd / IDE code completion:
+```sh
+cd build && ./build.sh compdb
+```
+
+This copies `compile_commands.json` to the project root for automatic IDE pickup.
+
+### Running
+
+```sh
+cd build && ./build.sh run             # build and run --help
+cd build && ./build.sh dev             # build and run with dev sample args
+```
 
 ## Testing
 

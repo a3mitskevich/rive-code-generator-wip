@@ -1,161 +1,277 @@
 #!/bin/bash
-set -euo pipefail
 
-echo "Building rive_code_generator"
+# build.sh: build the rive_code_generator project.
+#
+# Usage:
+#
+#   cd build
+#   ./build.sh                # debug build
+#   ./build.sh release        # release build
+#   ./build.sh release clean  # clean, followed by a release build
+#   ./build.sh compdb         # generate compile_commands.json for IDE integration
+#   ./build.sh ninja          # use ninja for a debug build
+#   ./build.sh ninja release  # use ninja for a release build
+#   ./build.sh run            # build and run --help
+#   ./build.sh dev            # build and run with dev sample args
+#   ./build.sh rebuild out/debug  # relaunch build with previously configured args
+#
+# Specify build targets after "--":
+#
+#   ./build.sh -- rive_code_generator
+#   ./build.sh ninja release -- rive_code_generator
 
-CONFIG=debug
-KIND=
-CLEAN=false
-RUN=false
-DEV=false
-RUNTIME_PATH="$PWD/../rive-runtime/build"
+set -e
+set -o pipefail
 
-for var in "$@"; do
-  case "$var" in
-    --help|-h)
-      echo "Usage: ./build.sh [release] [clean] [run] [dev]"
-      exit 0
-      ;;
-  esac
+# Resolve the directory where this script lives.
+# https://stackoverflow.com/questions/59895/how-do-i-get-the-directory-where-a-bash-script-is-located-from-within-the-script
+SOURCE=${BASH_SOURCE[0]}
+while [ -L "$SOURCE" ]; do
+    DIR=$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )
+    SOURCE=$(readlink "$SOURCE")
+    [[ $SOURCE != /* ]] && SOURCE=$DIR/$SOURCE
 done
+SCRIPT_DIR=$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )
 
-for var in "$@"; do
-  case "$var" in
-    release) CONFIG=release ;;
-    clean) CLEAN=true ;;
-    run) RUN=true ;;
-    dev) DEV=true ;;
-  esac
-done
+RIVE_RUNTIME_BUILD_DIR="$SCRIPT_DIR/../rive-runtime/build"
 
-unameOut="$(uname -s)"
-case "${unameOut}" in
-Linux*) machine=linux ;;
-Darwin*) machine=macosx ;;
-MINGW*) machine=windows ;;
-*) machine="unhandled:${unameOut}" ;;
+# Detect host machine and number of CPU cores.
+case "$(uname -s)" in
+    Darwin*)
+        if [[ $(arch) = "arm64" ]]; then
+            HOST_MACHINE="mac_arm64"
+        else
+            HOST_MACHINE="mac_x64"
+        fi
+        NUM_CORES=$(($(sysctl -n hw.physicalcpu) + 1))
+        ;;
+    MINGW*|MSYS*)
+        HOST_MACHINE="windows"
+        NUM_CORES=$NUMBER_OF_PROCESSORS
+        ;;
+    Linux*)
+        HOST_MACHINE="linux"
+        NUM_CORES=$(grep -c processor /proc/cpuinfo)
+        ;;
 esac
-OS=$machine
 
-if [[ $OS == "windows" ]]; then
+# Windows fallback: delegate to PowerShell if msbuild is not available.
+if [[ "$HOST_MACHINE" = "windows" ]]; then
     if ! command -v msbuild.exe &>/dev/null; then
-        powershell "./build.ps1" $@
+        powershell "./build.ps1" "$@"
         exit $?
     fi
 fi
-if [[ $OS = "linux" ]]; then
-    LOCAL_ARCH=$('arch')
-    if [[ $LOCAL_ARCH == "aarch64" ]]; then
-        LINUX_ARCH=arm64
+
+RIVE_NO_BUILD=false
+if [[ "${1:-}" = "nobuild" ]]; then
+    RIVE_NO_BUILD=true
+    shift
+fi
+
+RUN=false
+DEV=false
+
+if [[ "${1:-}" = "rebuild" ]]; then
+    # Load args from an existing build.
+    RIVE_OUT=$2
+    shift
+    shift
+
+    if [ ! -d "$RIVE_OUT" ]; then
+        echo "OUT directory '$RIVE_OUT' not found."
+        exit 1
+    fi
+
+    ARGS_FILE=$RIVE_OUT/.rive_premake_args
+    if [ ! -f "$ARGS_FILE" ]; then
+        echo "Premake args file '$ARGS_FILE' not found."
+        exit 1
+    fi
+
+    RIVE_PREMAKE_ARGS="$(< "$ARGS_FILE")"
+    RIVE_BUILD_SYSTEM="$(awk '{print $1}' "$ARGS_FILE")"
+else
+    # New build. Parse arguments into premake options.
+    RIVE_PREMAKE_ARGS="${RIVE_PREMAKE_ARGS:-}"
+
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            debug) RIVE_CONFIG="${RIVE_CONFIG:-debug}" ;;
+            release) RIVE_CONFIG="${RIVE_CONFIG:-release}" ;;
+            clean) RIVE_CLEAN="${RIVE_CLEAN:-true}" ;;
+            compdb)
+                RIVE_BUILD_SYSTEM="${RIVE_BUILD_SYSTEM:-export-compile-commands}"
+                RIVE_OUT="${RIVE_OUT:-out/compdb}"
+                ;;
+            ninja) RIVE_BUILD_SYSTEM="${RIVE_BUILD_SYSTEM:-ninja}" ;;
+            xcode) RIVE_BUILD_SYSTEM="${RIVE_BUILD_SYSTEM:-xcode4}" ;;
+            run) RUN=true ;;
+            dev) DEV=true ;;
+            --)
+                shift
+                break
+                ;;
+            *) RIVE_PREMAKE_ARGS="$RIVE_PREMAKE_ARGS $1" ;;
+        esac
+        shift
+    done
+
+    RIVE_CONFIG="${RIVE_CONFIG:-debug}"
+
+    if [ -z "${RIVE_OUT:-}" ]; then
+        RIVE_OUT="out/$RIVE_CONFIG"
+    fi
+
+    if [[ "$HOST_MACHINE" = "windows" ]]; then
+        RIVE_BUILD_SYSTEM="${RIVE_BUILD_SYSTEM:-vs2022}"
     else
-        LINUX_ARCH=x64
+        RIVE_BUILD_SYSTEM="${RIVE_BUILD_SYSTEM:-gmake2}"
+    fi
+
+    RIVE_PREMAKE_ARGS="$RIVE_BUILD_SYSTEM --config=$RIVE_CONFIG --out=$RIVE_OUT --scripts=$RIVE_RUNTIME_BUILD_DIR --file=premake5_code_generator.lua $RIVE_PREMAKE_ARGS"
+
+    if [[ "${RIVE_CLEAN:-}" = true ]]; then
+        echo "Cleaning $RIVE_OUT..."
+        rm -fr "./$RIVE_OUT"
     fi
 fi
 
-# Setup PREMAKE
-download_premake() {
-    mkdir -p dependencies/bin
-    pushd dependencies/bin
-    echo Downloading Premake5
-    if [[ $OS = "macosx" ]]; then
-        curl https://github.com/premake/premake-core/releases/download/v5.0.0-beta3/premake-5.0.0-beta3-macosx.tar.gz -L -o premake_macosx.tar.gz
-        # Export premake5 into bin
-        tar -xvf premake_macosx.tar.gz 2>/dev/null
-        # the zip for beta3 does not have x
-        chmod +x premake5
-        # Delete downloaded archive
-        rm premake_macosx.tar.gz
-    elif [[ $OS = "windows" ]]; then
-        curl https://github.com/premake/premake-core/releases/download/v5.0.0-beta3/premake-5.0.0-beta3-windows.zip -L -o premake_windows.zip
-        unzip premake_windows.zip
-        rm premake_windows.zip
-    elif [[ $OS = "linux" ]]; then
-        pushd ..
-        git clone --depth 1 --branch v5.0.0-beta2 https://github.com/premake/premake-core.git
-        pushd premake-core
-        if [[ $LINUX_ARCH == "arm64" ]]; then
-            PREMAKE_MAKE_ARCH=ARM
-        else
-            PREMAKE_MAKE_ARCH=x86
+echo "Building rive_code_generator ($RIVE_CONFIG)"
+
+# ---- Dependencies ----
+
+mkdir -p "$SCRIPT_DIR/dependencies"
+pushd "$SCRIPT_DIR/dependencies" > /dev/null
+
+# Build premake5 from source, cached by tag.
+RIVE_PREMAKE_TAG="${RIVE_PREMAKE_TAG:-v5.0.0-beta7}"
+PREMAKE_INSTALL_DIR="$SCRIPT_DIR/dependencies/premake-core/bin/${RIVE_PREMAKE_TAG}_release"
+if [ ! -f "$PREMAKE_INSTALL_DIR/premake5" ]; then
+    echo "Building Premake ($RIVE_PREMAKE_TAG)..."
+    rm -fr premake-core
+    git clone --depth 1 --branch $RIVE_PREMAKE_TAG https://github.com/premake/premake-core.git
+    pushd premake-core > /dev/null
+    case "$HOST_MACHINE" in
+        mac_arm64) make -f Bootstrap.mak osx PLATFORM=ARM ;;
+        mac_x64) make -f Bootstrap.mak osx ;;
+        windows) ./Bootstrap.bat ;;
+        *) make -f Bootstrap.mak linux ;;
+    esac
+    cp -r bin/release "$PREMAKE_INSTALL_DIR"
+    popd > /dev/null
+fi
+export PATH="$PREMAKE_INSTALL_DIR:$PATH"
+
+# Add rive-runtime build scripts to the premake path.
+export PREMAKE_PATH="$RIVE_RUNTIME_BUILD_DIR"
+
+# Setup premake-ninja.
+if [[ "$RIVE_BUILD_SYSTEM" = "ninja" ]]; then
+    if [ ! -d premake-ninja ]; then
+        git clone --branch rive_modifications https://github.com/rive-app/premake-ninja.git
+    fi
+    export PREMAKE_PATH="$SCRIPT_DIR/dependencies/premake-ninja:$PREMAKE_PATH"
+fi
+
+# Setup premake-export-compile-commands.
+if [[ "$RIVE_BUILD_SYSTEM" = "export-compile-commands" ]]; then
+    if [ ! -d premake-export-compile-commands ]; then
+        git clone --branch more_cpp_support https://github.com/rive-app/premake-export-compile-commands.git
+    fi
+    export PREMAKE_PATH="$SCRIPT_DIR/dependencies/premake-export-compile-commands:$PREMAKE_PATH"
+fi
+
+popd > /dev/null # leave dependencies
+
+# ---- Incremental build validation ----
+
+if [[ -d "$RIVE_OUT" && "$RIVE_NO_BUILD" = false ]]; then
+    if [ -f "$RIVE_OUT/.rive_premake_args" ]; then
+        if [[ "$RIVE_PREMAKE_ARGS" != "$(< "$RIVE_OUT/.rive_premake_args")" ]]; then
+            echo "error: premake5 arguments for current build do not match previous arguments"
+            echo "  previous command: premake5 $(< "$RIVE_OUT/.rive_premake_args")"
+            echo "   current command: premake5 $RIVE_PREMAKE_ARGS"
+            echo "If you wish to overwrite the existing build, please use 'clean'"
+            exit 1
         fi
-        make -f Bootstrap.mak linux PLATFORM=$PREMAKE_MAKE_ARCH
-        cp bin/release/* ../bin
-        popd
-        popd
-        # curl https://github.com/premake/premake-core/releases/download/v5.0.0-beta2/premake-5.0.0-beta2-linux.tar.gz -L -o premake_linux.tar.gz
-        # # Export premake5 into bin
-        # tar -xvf premake_linux.tar.gz 2>/dev/null
-        # # Delete downloaded archive
-        # rm premake_linux.tar.gz
     fi
-    popd
-}
-if [[ ! -f "dependencies/bin/premake5" ]]; then
-    download_premake
+else
+    mkdir -p "$RIVE_OUT"
+    echo "$RIVE_PREMAKE_ARGS" > "$RIVE_OUT/.rive_premake_args"
 fi
 
-if [[ ! -d "dependencies/export-compile-commands" ]]; then
-    pushd dependencies
-    git clone https://github.com/tarruda/premake-export-compile-commands export-compile-commands
-    popd
+# ---- Run premake5 ----
+
+echo "premake5 $RIVE_PREMAKE_ARGS"
+premake5 $RIVE_PREMAKE_ARGS | grep -v '^Done ([1-9]*ms).$'
+
+if [[ "$RIVE_NO_BUILD" = true ]]; then
+    echo "Not building as nobuild was specified"
+    exit 0
 fi
 
-export PREMAKE=$PWD/dependencies/bin/premake5
+# ---- Build dispatch ----
 
-case "$OS" in
-  macosx|linux) TARGET=gmake2 ;;
-  windows) TARGET=vs2022; KIND=--shared; EXTRA_OUT=_shared ;;
+case "$RIVE_BUILD_SYSTEM" in
+    export-compile-commands)
+        rm -f "$SCRIPT_DIR/../compile_commands.json"
+        cp "$RIVE_OUT/compile_commands/default.json" "$SCRIPT_DIR/../compile_commands.json"
+        echo "compile_commands.json copied to project root"
+        wc "$SCRIPT_DIR/../compile_commands.json"
+        ;;
+    gmake2)
+        echo "make -C $RIVE_OUT -j$NUM_CORES $@"
+        make -C "$RIVE_OUT" -j$NUM_CORES "$@"
+        ;;
+    ninja)
+        echo "ninja -C $RIVE_OUT $@"
+        ninja -C "$RIVE_OUT" "$@"
+        ;;
+    xcode4)
+        if [[ $# = 0 ]]; then
+            echo 'No targets specified for xcode: Attempting to grok them from "xcodebuild -list".'
+            XCODE_SCHEMES=$(for f in $(xcodebuild -list -workspace "$RIVE_OUT/rive.xcworkspace" | grep '^        '); do printf " $f"; done)
+            echo "  -> grokked:$XCODE_SCHEMES"
+        else
+            XCODE_SCHEMES="$@"
+        fi
+        for SCHEME in $XCODE_SCHEMES; do
+            echo "xcodebuild -workspace $RIVE_OUT/rive.xcworkspace -scheme $SCHEME"
+            xcodebuild -workspace "$RIVE_OUT/rive.xcworkspace" -scheme "$SCHEME"
+        done
+        ;;
+    vs2022)
+        MSVC_TARGETS=""
+        for TARGET in "$@"; do
+            MSVC_TARGETS="$MSVC_TARGETS -t:$TARGET"
+        done
+        echo "msbuild.exe ./$RIVE_OUT/rive.sln $MSVC_TARGETS"
+        msbuild.exe "./$RIVE_OUT/rive.sln" $MSVC_TARGETS
+        ;;
+    *)
+        echo "Unsupported build system: $RIVE_BUILD_SYSTEM"
+        exit 1
+        ;;
 esac
 
-# export PREMAKE_PATH="$RUNTIME_PATH":$PREMAKE_PATH
-
-if [[ $CLEAN == true ]]; then
-    echo 'Cleaning...'
-    rm -fR out
-fi
-
-OUT="out/lib/$CONFIG"
-OUT="${OUT%/}" # Remove trailing slash if it exists
-$PREMAKE --scripts=../rive-runtime/build/ --file=premake5_code_generator.lua $TARGET --config=$CONFIG --out=$OUT
-
-if [ "$OS" = "macosx" ]; then
-  NUM_CORES=$(($(sysctl -n hw.physicalcpu) + 1))
-elif [ "$OS" = "linux" ]; then
-  NUM_CORES=$(nproc)
-elif [ "$OS" = "windows" ]; then
-  NUM_CORES=$NUMBER_OF_PROCESSORS
-else
-  echo "Unsupported OS: $OS"
-  exit 1
-fi
-
-if [[ $OS = "windows" ]]; then
-    pushd "$OUT"
-    msbuild.exe rive.sln -m:$NUM_CORES
-    popd
-else
-    make -C $OUT -j$NUM_CORES
-fi
+# ---- Post-build ----
 
 EXECUTABLE_NAME=rive_code_generator
-if [[ $OS = "windows" ]]; then
+if [[ "$HOST_MACHINE" = "windows" ]]; then
     EXECUTABLE="$EXECUTABLE_NAME.exe"
 else
     EXECUTABLE="$EXECUTABLE_NAME"
 fi
 
-echo -e "\033[0;32m\nBuild complete: $OUT/$EXECUTABLE\033[0m"
-
-if [[ $RUN == true ]]; then
-    "$OUT/rive_code_generator" --help
+if [[ "$RIVE_BUILD_SYSTEM" != "export-compile-commands" ]]; then
+    echo -e "\033[0;32m\nBuild complete: $RIVE_OUT/$EXECUTABLE\033[0m"
 fi
-if [[ $DEV == true ]]; then
-    pwd
-    # "$OUT/$EXECUTABLE" -i ../samples/signage_v03.riv -o out/rive_generated.dart -t ../templates/dart_template.mustache
-    # "$OUT/$EXECUTABLE" -i ../samples/rating.riv -o out/rive_generated.dart -t ../templates/dart_template.mustache
-    # "$OUT/$EXECUTABLE" -i ../samples/ -o out/generated/rive_generated.dart -t ../templates/dart_template.mustache
-    "$OUT/$EXECUTABLE" -i ../samples/ -o out/generated/rive_viewmodel.dart -t ../templates/viewmodel_template.mustache
-    # "$OUT/$EXECUTABLE" -i ../samples/ -o out/generated/rive.json -t ../templates/json_template.mustache
-    # "$OUT/$EXECUTABLE" -i ../samples/nested_test.riv -o out/rive_generated.dart --help
-    # "$OUT/$EXECUTABLE" -i ../samples/ -o out/rive_generated.dart
+
+if [[ $RUN = true ]]; then
+    "$RIVE_OUT/$EXECUTABLE" --help
+fi
+
+if [[ $DEV = true ]]; then
+    "$RIVE_OUT/$EXECUTABLE" -i ../samples/ -o "$RIVE_OUT/generated/rive_viewmodel.dart" -t ../templates/viewmodel_template.mustache
 fi
