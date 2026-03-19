@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "CLIUTILS/CLI11.hpp"
+#include "console_output.h"
 #include "default_template.h"
 #include "kainjow/mustache.hpp"
 #include "rive/animation/linear_animation_instance.hpp"
@@ -545,16 +546,14 @@ static std::optional<RiveFileData> processRiveFile(const std::string& riveFilePa
     // Check if the file is empty
     if (std::filesystem::is_empty(riveFilePath))
     {
-        std::cerr << "Error: Rive file is empty: " << riveFilePath
-                  << std::endl;
+        console::error("Rive file is empty: " + riveFilePath);
         return std::nullopt;
     }
 
     auto riveFile = openFile(riveFilePath.c_str());
     if (!riveFile)
     {
-        std::cerr << "Error: Failed to parse Rive file: " << riveFilePath
-                  << std::endl;
+        console::error("Failed to parse Rive file: " + riveFilePath);
         return std::nullopt;
     }
 
@@ -680,8 +679,7 @@ static std::optional<std::string> readTemplateFile(const std::string& path)
     std::ifstream file(path);
     if (!file.is_open())
     {
-        std::cerr << "Warning: Unable to open template file: " << path
-                  << std::endl;
+        console::warning("Unable to open template file: " + path);
         return std::nullopt;
     }
     return std::string(std::istreambuf_iterator<char>(file),
@@ -718,6 +716,10 @@ int main(int argc, char* argv[])
 
     CLI11_PARSE(app, argc, argv)
 
+    console::header("Rive Code Generator");
+    console::Timer timer;
+    console::Stats stats;
+
     std::string templateStr;
     if (!templatePath.empty())
     {
@@ -725,14 +727,11 @@ int main(int argc, char* argv[])
         if (customTemplate)
         {
             templateStr = *customTemplate;
-            std::cout << "Using custom template from: " << templatePath
-                      << std::endl;
+            console::success("Template loaded (custom: " + templatePath + ")");
         }
         else
         {
-            // TODO: This is probably not needed. Or can have a safety to
-            // fallback to the language specified
-            std::cout << "Falling back to default template." << std::endl;
+            console::warning("Custom template failed, using default dart");
             templateStr = default_templates::DEFAULT_DART_TEMPLATE;
         }
     }
@@ -741,11 +740,11 @@ int main(int argc, char* argv[])
         if (language == Language::Dart)
         {
             templateStr = default_templates::DEFAULT_DART_TEMPLATE;
+            console::success("Template loaded (default dart)");
         }
         else if (language == Language::JavaScript)
         {
-            std::cout << "JavaScript code generation is not yet supported."
-                      << std::endl;
+            console::error("JavaScript code generation is not yet supported");
             return 1;
         }
     }
@@ -754,9 +753,13 @@ int main(int argc, char* argv[])
 
     if (riveFiles.empty())
     {
-        std::cerr << "No .riv files found in the specified path." << std::endl;
+        console::error("No .riv files found in the specified path");
         return 1;
     }
+
+    console::success("Found " + console::pluralize((int)riveFiles.size(), "file"));
+    console::blank();
+    std::cout << "  Processing files..." << std::endl;
 
     std::vector<RiveFileData> riveFileDataList;
     for (const auto& riv_file : riveFiles)
@@ -765,8 +768,52 @@ int main(int argc, char* argv[])
         if (result)
         {
             riveFileDataList.push_back(*result);
+
+            const auto& fd = *result;
+            std::filesystem::path p(riv_file);
+            console::step(p.filename().string());
+
+            int numArtboards = (int)fd.artboards.size();
+            int numAnimations = 0;
+            int numStateMachines = 0;
+            for (const auto& ab : fd.artboards)
+            {
+                numAnimations += (int)ab.animations.size();
+                numStateMachines += (int)ab.stateMachines.size();
+            }
+            console::detail(console::pluralize(numArtboards, "artboard") +
+                            ", " +
+                            console::pluralize(numAnimations, "animation") +
+                            ", " +
+                            console::pluralize(numStateMachines, "state machine"));
+
+            int numAssets = (int)fd.assets.size();
+            if (numAssets > 0)
+            {
+                int images = 0, fonts = 0, audio = 0, unknown = 0;
+                for (const auto& a : fd.assets)
+                {
+                    if (a.type == "image") images++;
+                    else if (a.type == "font") fonts++;
+                    else if (a.type == "audio") audio++;
+                    else unknown++;
+                }
+                console::detail(console::pluralize(numAssets, "asset") +
+                                " (" + console::assetBreakdown(images, fonts, audio, unknown) + ")");
+            }
+
+            stats.files++;
+            stats.artboards += numArtboards;
+            stats.animations += numAnimations;
+            stats.stateMachines += numStateMachines;
+            stats.assets += numAssets;
+            stats.enums += (int)fd.enums.size();
+            stats.viewModels += (int)fd.viewmodels.size();
         }
-        // If result is nullopt, the error has already been printed
+        else
+        {
+            stats.errors++;
+        }
     }
 
     // Mustache template rendering
@@ -1049,7 +1096,8 @@ int main(int argc, char* argv[])
     kainjow::mustache::mustache tmpl(templateStr);
     std::string result = tmpl.render(templateData);
 
-    std::cout << "Rive: output_file_path = " << outputFilePath << std::endl;
+    console::blank();
+    console::success("Template rendered");
 
     std::filesystem::path output_path(outputFilePath);
 
@@ -1066,14 +1114,22 @@ int main(int argc, char* argv[])
     std::ofstream output_file(output_path);
     if (!output_file.is_open())
     {
-        std::cerr << "Error: Unable to open output file: " << output_path
-                  << std::endl;
+        console::error("Unable to open output file: " + output_path.string());
         return 1;
     }
     output_file << result;
     output_file.close();
 
-    std::cout << "File generated successfully: " << output_path << std::endl;
+    console::success("Output written to: " + output_path.string());
+    console::blank();
+    console::summary("Summary: " +
+                     console::pluralize(stats.files, "file") + ", " +
+                     console::pluralize(stats.artboards, "artboard") + ", " +
+                     console::pluralize(stats.animations, "animation") + ", " +
+                     console::pluralize(stats.stateMachines, "state machine") + ", " +
+                     console::pluralize(stats.assets, "asset"));
+    console::summary("Done in " + timer.elapsedStr());
+    console::blank();
 
     return 0;
 }
