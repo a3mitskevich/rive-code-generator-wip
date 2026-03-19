@@ -1,0 +1,7 @@
+build/out/
+build/dependencies/
+.git/
+.github/
+.idea/
+*.o
+*.d

@@ -1,0 +1,27 @@
+# Multi-stage Alpine Linux build for rive_code_generator
+# Produces a statically-linked x86-64 ELF binary via musl/clang.
+
+# ── Stage 1: builder ─────────────────────────────────────────────
+FROM alpine:3.19 AS builder
+
+RUN apk add --no-cache \
+    bash \
+    clang \
+    g++ \
+    build-base \
+    git \
+    make \
+    linux-headers \
+    lld \
+    llvm \
+    musl-dev \
+    util-linux-dev
+
+WORKDIR /src
+COPY . .
+
+RUN cd build && ./build.sh release
+
+# ── Stage 2: export (scratch) ────────────────────────────────────
+FROM scratch AS export
+COPY --from=builder /src/build/out/release/rive_code_generator /rive_code_generator
