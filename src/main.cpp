@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cctype>
 #include <filesystem>
 #include <fstream>
@@ -669,6 +670,69 @@ static std::optional<RiveFileData> processRiveFile(const std::string& riveFilePa
                                        stateMachines,
                                        textValueRuns,
                                        nestedTextValueRuns});
+    }
+
+    // Sort all collections alphabetically for deterministic output
+    std::sort(fileData.assets.begin(), fileData.assets.end(),
+              [](const AssetInfo& a, const AssetInfo& b) {
+                  return a.name < b.name;
+              });
+
+    std::sort(fileData.enums.begin(), fileData.enums.end(),
+              [](const EnumInfo& a, const EnumInfo& b) {
+                  return a.name < b.name;
+              });
+    for (auto& enumInfo : fileData.enums)
+    {
+        std::sort(enumInfo.values.begin(), enumInfo.values.end(),
+                  [](const EnumValueInfo& a, const EnumValueInfo& b) {
+                      return a.key < b.key;
+                  });
+    }
+
+    std::sort(fileData.viewmodels.begin(), fileData.viewmodels.end(),
+              [](const ViewModelInfo& a, const ViewModelInfo& b) {
+                  return a.name < b.name;
+              });
+    for (auto& vm : fileData.viewmodels)
+    {
+        std::sort(vm.properties.begin(), vm.properties.end(),
+                  [](const PropertyInfo& a, const PropertyInfo& b) {
+                      return a.name < b.name;
+                  });
+    }
+
+    std::sort(fileData.artboards.begin(), fileData.artboards.end(),
+              [](const ArtboardData& a, const ArtboardData& b) {
+                  return a.artboardName < b.artboardName;
+              });
+    for (auto& artboard : fileData.artboards)
+    {
+        std::sort(artboard.animations.begin(), artboard.animations.end());
+
+        std::sort(artboard.stateMachines.begin(), artboard.stateMachines.end(),
+                  [](const auto& a, const auto& b) {
+                      return a.first < b.first;
+                  });
+        for (auto& [smName, inputs] : artboard.stateMachines)
+        {
+            std::sort(inputs.begin(), inputs.end(),
+                      [](const InputInfo& a, const InputInfo& b) {
+                          return a.name < b.name;
+                      });
+        }
+
+        std::sort(artboard.textValueRuns.begin(), artboard.textValueRuns.end(),
+                  [](const TextValueRunInfo& a, const TextValueRunInfo& b) {
+                      return a.name < b.name;
+                  });
+
+        std::sort(artboard.nestedTextValueRuns.begin(),
+                  artboard.nestedTextValueRuns.end(),
+                  [](const NestedTextValueRunInfo& a,
+                     const NestedTextValueRunInfo& b) {
+                      return a.name < b.name;
+                  });
     }
 
     return fileData;
