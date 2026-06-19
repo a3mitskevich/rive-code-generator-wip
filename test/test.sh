@@ -17,7 +17,7 @@ else
 fi
 
 # Define the command as a reusable variable
-RIVE_GENERATOR="../build/out/lib/release/rive_code_generator"
+RIVE_GENERATOR="../build/out/release/rive_code_generator"
 
 # Add a new variable for the update flag
 UPDATE_EXPECTED=false
