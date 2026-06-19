@@ -29,6 +29,9 @@ enum {{enum_pascal_case}}Enum {
 {{#view_models}}
 /// ViewModel class for {{view_model_name}}
 class {{view_model_pascal_case}} {
+  /// Named instances of this view model defined in the .riv file.
+  static const List<String> instanceNames = [{{#instance_names}}'{{instance_name}}'{{^last}}, {{/last}}{{/instance_names}}];
+
   final rive.ViewModelInstance instance;
   {{#properties}}
   {{#property_type}}{{#is_view_model}}final {{backing_pascal_case}} {{property_camel_case}};{{/is_view_model}}{{/property_type}}{{#property_type}}final {{#is_view_model}}rive.ViewModelInstance{{/is_view_model}}{{#is_enum}}rive.ViewModelInstanceEnum{{/is_enum}}{{#is_string}}rive.ViewModelInstanceString{{/is_string}}{{#is_number}}rive.ViewModelInstanceNumber{{/is_number}}{{#is_boolean}}rive.ViewModelInstanceBoolean{{/is_boolean}}{{#is_color}}rive.ViewModelInstanceColor{{/is_color}}{{#is_trigger}}rive.ViewModelInstanceTrigger{{/is_trigger}} _{{property_camel_case}}Property;{{/property_type}}

@@ -40,9 +40,14 @@ class _{{riv_pascal_case}}Artboard{{artboard_pascal_case}} {
   const _{{riv_pascal_case}}Artboard{{artboard_pascal_case}}();
 
   String get name => '{{artboard_name}}';
+  double get width => {{artboard_width}};
+  double get height => {{artboard_height}};
+  {{#has_default_state_machine}}String get defaultStateMachine => '{{default_state_machine_name}}';{{/has_default_state_machine}}
+  {{#has_bound_view_model}}String get boundViewModel => '{{bound_view_model_name}}';{{/has_bound_view_model}}
 
   _{{riv_pascal_case}}{{artboard_pascal_case}}Animations get animations => const _{{riv_pascal_case}}{{artboard_pascal_case}}Animations();
   _{{riv_pascal_case}}{{artboard_pascal_case}}StateMachines get stateMachines => const _{{riv_pascal_case}}{{artboard_pascal_case}}StateMachines();
+  _{{riv_pascal_case}}{{artboard_pascal_case}}Events get events => const _{{riv_pascal_case}}{{artboard_pascal_case}}Events();
 }
 
 /// Container for animation names in the "{{artboard_camel_case}}" artboard.
@@ -71,6 +76,15 @@ class _{{riv_pascal_case}}{{artboard_pascal_case}}{{state_machine_camel_case}} {
   String get name => '{{state_machine_name}}';
 }
 {{/state_machines}}
+
+/// Container for event names in the "{{artboard_camel_case}}" artboard.
+class _{{riv_pascal_case}}{{artboard_pascal_case}}Events {
+  const _{{riv_pascal_case}}{{artboard_pascal_case}}Events();
+
+  {{#events}}
+  String get {{event_camel_case}} => '{{event_name}}';
+  {{/events}}
+}
 
 {{/artboards}}
 
