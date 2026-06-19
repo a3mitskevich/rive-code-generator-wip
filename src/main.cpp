@@ -980,10 +980,27 @@ static std::optional<RiveFileData> processRiveFile(const std::string& riveFilePa
         return std::nullopt;
     }
 
-    auto riveFile = openFile(riveFilePath.c_str());
+    rive::ImportResult importResult = rive::ImportResult::malformed;
+    auto riveFile = openFile(riveFilePath.c_str(), &importResult);
     if (!riveFile)
     {
-        console::error("Failed to parse Rive file: " + riveFilePath);
+        switch (importResult)
+        {
+            case rive::ImportResult::unsupportedVersion:
+                console::error(
+                    "Unsupported Rive runtime version (generator supports up "
+                    "to " +
+                    std::to_string(rive::File::majorVersion) + "." +
+                    std::to_string(rive::File::minorVersion) + "): " +
+                    riveFilePath);
+                break;
+            case rive::ImportResult::malformed:
+                console::error("Malformed Rive file: " + riveFilePath);
+                break;
+            default:
+                console::error("Failed to parse Rive file: " + riveFilePath);
+                break;
+        }
         return std::nullopt;
     }
 
@@ -1872,6 +1889,10 @@ int main(int argc, char* argv[])
     }
 
     templateData["generated_file_name"] = generatedFileName;
+    templateData["runtime_major_version"] =
+        std::to_string(rive::File::majorVersion);
+    templateData["runtime_minor_version"] =
+        std::to_string(rive::File::minorVersion);
     templateData["riv_files"] = riveFileList;
 
     kainjow::mustache::mustache tmpl(templateStr);
@@ -1911,6 +1932,15 @@ int main(int argc, char* argv[])
                      console::pluralize(stats.assets, "asset"));
     console::summary("Done in " + timer.elapsedStr());
     console::blank();
+
+    // Signal failure to callers/CI if any input file failed to process.
+    if (stats.errors > 0)
+    {
+        console::error(
+            console::pluralize(stats.errors, "file") +
+            " failed to process");
+        return 1;
+    }
 
     return 0;
 }
