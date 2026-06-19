@@ -1,4 +1,5 @@
 {
+  "runtimeVersion": "{{runtime_major_version}}.{{runtime_minor_version}}",
   "riveMeta": {
     {{#riv_files}}
     "{{riv_camel_case}}": {
@@ -8,6 +9,10 @@
           "name": "{{asset_name}}",
           "type": "{{asset_type}}",
           "assetId": "{{asset_id}}",
+          "uniqueFilename": "{{asset_unique_filename}}",
+          "isEmbedded": {{#asset_is_embedded}}true{{/asset_is_embedded}}{{^asset_is_embedded}}false{{/asset_is_embedded}},
+          "width": {{asset_width}},
+          "height": {{asset_height}},
           "cdnUuid": "{{asset_cdn_uuid}}",
           "cdnBaseUrl": "{{asset_cdn_base_url}}"
         }{{^last}},{{/last}}
@@ -19,7 +24,7 @@
           "name": "{{enum_name}}",
           "values": {
             {{#enum_values}}
-            "{{enum_value_camel_case}}": "{{enum_value_key}}"{{^last}},{{/last}}
+            "{{enum_value_camel_case}}": { "key": "{{enum_value_key}}", "value": "{{enum_value_value}}" }{{^last}},{{/last}}
             {{/enum_values}}
           }
         }{{^last}},{{/last}}
@@ -29,11 +34,18 @@
         {{#view_models}}
         "{{view_model_camel_case}}": {
           "name": "{{view_model_name}}",
+          "instanceNames": [
+            {{#instance_names}}
+            "{{instance_name}}"{{^last}},{{/last}}
+            {{/instance_names}}
+          ],
           "properties": {
             {{#properties}}
             "{{property_camel_case}}": {
               "name": "{{property_name}}",
-              "type": "{{#property_type}}{{type_name}}{{/property_type}}"
+              "type": "{{#property_type}}{{type_name}}{{/property_type}}",
+              "backingName": "{{#property_type}}{{backing_name}}{{/property_type}}",
+              "defaultValue": {{#has_default_value}}"{{property_default_value}}"{{/has_default_value}}{{^has_default_value}}null{{/has_default_value}}
             }{{^last}},{{/last}}
             {{/properties}}
           }
@@ -44,14 +56,39 @@
         {{#artboards}}
         "{{artboard_camel_case}}": {
           "name": "{{artboard_name}}",
+          "width": {{artboard_width}},
+          "height": {{artboard_height}},
+          "originX": {{artboard_origin_x}},
+          "originY": {{artboard_origin_y}},
+          "clip": {{#artboard_clip}}true{{/artboard_clip}}{{^artboard_clip}}false{{/artboard_clip}},
+          "defaultStateMachine": {{#has_default_state_machine}}"{{default_state_machine_name}}"{{/has_default_state_machine}}{{^has_default_state_machine}}null{{/has_default_state_machine}},
+          "boundViewModel": {{#has_bound_view_model}}"{{bound_view_model_name}}"{{/has_bound_view_model}}{{^has_bound_view_model}}null{{/has_bound_view_model}},
           "animations": {
             {{#animations}}
-            "{{animation_camel_case}}": "{{animation_name}}"{{^last}},{{/last}}
+            "{{animation_camel_case}}": {
+              "name": "{{animation_name}}",
+              "fps": {{animation_fps}},
+              "durationSeconds": {{animation_duration_seconds}},
+              "loop": "{{animation_loop}}",
+              "speed": {{animation_speed}}
+            }{{^last}},{{/last}}
             {{/animations}}
           },
           "textValueRuns": {
             {{#text_value_runs}}
-            "{{text_value_run_camel_case}}": "{{text_value_run_default_sanitized}}"{{^last}},{{/last}}
+            "{{text_value_run_camel_case}}": {
+              "name": "{{text_value_run_name}}",
+              "text": "{{text_value_run_default_sanitized}}",
+              "fontSize": {{text_value_run_font_size}},
+              "lineHeight": {{text_value_run_line_height}},
+              "letterSpacing": {{text_value_run_letter_spacing}},
+              "fontAssetId": "{{text_value_run_font_asset_id}}",
+              "align": "{{text_value_run_align}}",
+              "verticalAlign": "{{text_value_run_vertical_align}}",
+              "sizing": "{{text_value_run_sizing}}",
+              "overflow": "{{text_value_run_overflow}}",
+              "wrap": "{{text_value_run_wrap}}"
+            }{{^last}},{{/last}}
             {{/text_value_runs}}
           },
           "nestedTextValueRuns": [
@@ -62,6 +99,26 @@
             }{{^last}},{{/last}}
             {{/nested_text_value_runs}}
           ],
+          "events": {
+            {{#events}}
+            "{{event_camel_case}}": {
+              "name": "{{event_name}}",
+              "type": "{{event_type}}",
+              {{#is_open_url}}"url": "{{event_url}}",
+              "target": "{{event_target}}",{{/is_open_url}}
+              {{#is_audio}}"assetId": "{{event_asset_id}}",{{/is_audio}}
+              "properties": {
+                {{#properties}}
+                "{{property_camel_case}}": {
+                  "name": "{{property_name}}",
+                  "type": "{{property_type}}",
+                  "defaultValue": "{{property_default_value}}"
+                }{{^last}},{{/last}}
+                {{/properties}}
+              }
+            }{{^last}},{{/last}}
+            {{/events}}
+          },
           "stateMachines": {
             {{#state_machines}}
             "{{state_machine_camel_case}}": {
@@ -74,7 +131,16 @@
                   "defaultValue": "{{input_default_value}}"
                 }{{^last}},{{/last}}
                 {{/inputs}}
-              }
+              },
+              "states": [
+                {{#states}}
+                {
+                  "name": "{{state_name}}",
+                  "type": "{{state_type}}",
+                  "transitions": [{{#transitions}}"{{transition_to}}"{{^last}}, {{/last}}{{/transitions}}]
+                }{{^last}},{{/last}}
+                {{/states}}
+              ]
             }{{^last}},{{/last}}
             {{/state_machines}}
           }
