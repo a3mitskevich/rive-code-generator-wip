@@ -689,10 +689,50 @@ getStateMachinesFromArtboard(rive::ArtboardInstance* artboard)
                 }
             }
 
-            inputs.push_back({input->name(), inputType, defaultValue});
+            smInfo.inputs.push_back({input->name(), inputType, defaultValue});
         }
 
-        stateMachines.emplace_back(stateMachineName, inputs);
+        // States and transitions from the state machine definition.
+        if (const auto* definition = artboard->stateMachine(i))
+        {
+            for (size_t l = 0; l < definition->layerCount(); l++)
+            {
+                const auto* layer = definition->layer(l);
+                if (!layer)
+                {
+                    continue;
+                }
+                for (size_t s = 0; s < layer->stateCount(); s++)
+                {
+                    const auto* state = layer->state(s);
+                    if (!state)
+                    {
+                        continue;
+                    }
+                    StateInfo stateInfo;
+                    describeLayerState(state, stateInfo.name, stateInfo.type);
+
+                    for (size_t t = 0; t < state->transitionCount(); t++)
+                    {
+                        const auto* transition = state->transition(t);
+                        if (transition && transition->stateTo())
+                        {
+                            std::string toName, toType;
+                            describeLayerState(transition->stateTo(),
+                                               toName,
+                                               toType);
+                            if (!toName.empty())
+                            {
+                                stateInfo.transitions.push_back(toName);
+                            }
+                        }
+                    }
+                    smInfo.states.push_back(stateInfo);
+                }
+            }
+        }
+
+        stateMachines.push_back(smInfo);
     }
     return stateMachines;
 }
