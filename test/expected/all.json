@@ -1,183 +1,296 @@
 {
+  "runtimeVersion": "7.0",
   "riveMeta": {
-    "textRuns": {
+    "rewards": {
       "assets": {
-        "inter": {
-          "name": "Inter",
+        "doHyeon": {
+          "name": "Do Hyeon",
           "type": "font",
-          "assetId": "594377",
+          "assetId": "36489",
+          "uniqueFilename": "Do Hyeon-36489.ttf",
+          "isEmbedded": true,
+          "width": 0,
+          "height": 0,
           "cdnUuid": "",
           "cdnBaseUrl": "https://public.rive.app/cdn/uuid"
-        }
-      },
-      "artboards": {
-        "artboardNr1": {
-          "name": "Artboard-Nr1",
-          "animations": {
-            "timeline1": "Timeline 1"
-          },
-          "textValueRuns": {
-            "name": "gordon",
-            "surname": "hayes",
-            "run1": "Text run 1",
-            "run2": "Text run 2\n"
-          },
-          "nestedTextValueRuns": [
-            
-          ],
-          "stateMachines": {
-            "stateMachine1": {
-              "name": "State Machine 1",
-              "inputs": {
-                
-              }
-            }
-          }
         },
-        "artboardNr2": {
-          "name": "Artboard-Nr2",
-          "animations": {
-            "timeline1": "Timeline 1"
-          },
-          "textValueRuns": {
-            "arboard2Unique": "Artboard 2 unique value",
-            "name": "gordon",
-            "surname": "hayes",
-            "run1": "Text run 1",
-            "run2": "Text run 2\n"
-          },
-          "nestedTextValueRuns": [
-            
-          ],
-          "stateMachines": {
-            "stateMachine1": {
-              "name": "State Machine 1",
-              "inputs": {
-                
-              }
-            }
-          }
-        }
-      }
-    },
-    "nestedText": {
-      "assets": {
-        "inter": {
-          "name": "Inter",
+        "mochiyPopOne": {
+          "name": "Mochiy Pop One",
           "type": "font",
-          "assetId": "594377",
+          "assetId": "37631",
+          "uniqueFilename": "Mochiy Pop One-37631.ttf",
+          "isEmbedded": true,
+          "width": 0,
+          "height": 0,
+          "cdnUuid": "",
+          "cdnBaseUrl": "https://public.rive.app/cdn/uuid"
+        },
+        "oxanium": {
+          "name": "Oxanium",
+          "type": "font",
+          "assetId": "38140",
+          "uniqueFilename": "Oxanium-38140.ttf",
+          "isEmbedded": true,
+          "width": 0,
+          "height": 0,
           "cdnUuid": "",
           "cdnBaseUrl": "https://public.rive.app/cdn/uuid"
         }
       },
-      "artboards": {
-        "artboard1": {
-          "name": "Artboard1",
-          "animations": {
-            "timeline1": "Timeline 1"
-          },
-          "textValueRuns": {
-            "artboard1Textrun": "Text on artboard 1"
-          },
-          "nestedTextValueRuns": [
-            {
-              "name": "Artboard2-TextRun",
-              "path": "NestedArtboard2"
+      "enums": {
+        "itemSelection": {
+          "name": "Item_Selection",
+          "values": {
+            "coin": { "key": "Coin", "value": "" },
+            "gem": { "key": "Gem", "value": "" }
+          }
+        }
+      },
+      "viewModels": {
+        "button": {
+          "name": "Button",
+          "instanceNames": [
+            "Button"
+          ],
+          "properties": {
+            "item": {
+              "name": "Item",
+              "type": "viewModel",
+              "backingName": "Item",
+              "defaultValue": null
             },
-            {
-              "name": "Artboard3-TextRun",
-              "path": "NestedArtboard2/NestedArtboard3"
-            }
-          ],
-          "stateMachines": {
-            "stateMachine1": {
-              "name": "State Machine 1",
-              "inputs": {
-                
-              }
-            }
-          }
-        },
-        "artboarddonotfind": {
-          "name": "ArtboardDoNotFind",
-          "animations": {
-            "timeline1": "Timeline 1"
-          },
-          "textValueRuns": {
-            
-          },
-          "nestedTextValueRuns": [
-            
-          ],
-          "stateMachines": {
-            "stateMachine1": {
-              "name": "State Machine 1",
-              "inputs": {
-                
-              }
+            "itemText": {
+              "name": "Item_Text",
+              "type": "string",
+              "backingName": "",
+              "defaultValue": "Gems"
+            },
+            "pressed": {
+              "name": "Pressed",
+              "type": "trigger",
+              "backingName": "",
+              "defaultValue": null
+            },
+            "state1": {
+              "name": "State_1",
+              "type": "string",
+              "backingName": "",
+              "defaultValue": "Continue"
             }
           }
         },
-        "artboard3": {
-          "name": "Artboard3",
-          "animations": {
-            "timeline1": "Timeline 1"
-          },
-          "textValueRuns": {
-            "artboard3Textrun": "Text on artboard 3"
-          },
-          "nestedTextValueRuns": [
-            
+        "energyBar": {
+          "name": "Energy_Bar",
+          "instanceNames": [
+            ""
           ],
-          "stateMachines": {
-            "stateMachine1": {
-              "name": "State Machine 1",
-              "inputs": {
-                
-              }
+          "properties": {
+            "barColor": {
+              "name": "Bar_Color",
+              "type": "color",
+              "backingName": "",
+              "defaultValue": "0"
+            },
+            "energyBar": {
+              "name": "Energy_Bar",
+              "type": "number",
+              "backingName": "",
+              "defaultValue": "50"
+            },
+            "lives": {
+              "name": "Lives",
+              "type": "number",
+              "backingName": "",
+              "defaultValue": "5"
             }
           }
         },
-        "artboard2": {
-          "name": "Artboard2",
-          "animations": {
-            "timeline1": "Timeline 1"
-          },
-          "textValueRuns": {
-            "artboard2Textrun": "Text on artboard 2"
-          },
-          "nestedTextValueRuns": [
-            {
-              "name": "Artboard3-TextRun",
-              "path": "NestedArtboard3"
-            }
+        "item": {
+          "name": "Item",
+          "instanceNames": [
+            "Chest-instance",
+            "Coin-instance",
+            "Gem-instance"
           ],
-          "stateMachines": {
-            "stateMachine1": {
-              "name": "State Machine 1",
-              "inputs": {
-                
-              }
+          "properties": {
+            "itemSelection": {
+              "name": "Item_Selection",
+              "type": "enum",
+              "backingName": "Item_Selection",
+              "defaultValue": "Coin"
+            }
+          }
+        },
+        "itemIconValue": {
+          "name": "Item_Icon_Value",
+          "instanceNames": [
+            "Coin",
+            "Gem"
+          ],
+          "properties": {
+            "iconReact": {
+              "name": "Icon_React",
+              "type": "trigger",
+              "backingName": "",
+              "defaultValue": null
+            },
+            "itemValue": {
+              "name": "Item_Value",
+              "type": "number",
+              "backingName": "",
+              "defaultValue": "3000"
+            },
+            "propertyOfItem": {
+              "name": "Property_Of_Item",
+              "type": "viewModel",
+              "backingName": "Item",
+              "defaultValue": null
+            }
+          }
+        },
+        "rewards": {
+          "name": "Rewards",
+          "instanceNames": [
+            ""
+          ],
+          "properties": {
+            "button": {
+              "name": "Button",
+              "type": "viewModel",
+              "backingName": "Button",
+              "defaultValue": null
+            },
+            "coin": {
+              "name": "Coin",
+              "type": "viewModel",
+              "backingName": "Item_Icon_Value",
+              "defaultValue": null
+            },
+            "color": {
+              "name": "Color",
+              "type": "color",
+              "backingName": "",
+              "defaultValue": "0"
+            },
+            "energyBar": {
+              "name": "Energy_Bar",
+              "type": "viewModel",
+              "backingName": "Energy_Bar",
+              "defaultValue": null
+            },
+            "gem": {
+              "name": "Gem",
+              "type": "viewModel",
+              "backingName": "Item_Icon_Value",
+              "defaultValue": null
+            },
+            "height": {
+              "name": "Height",
+              "type": "number",
+              "backingName": "",
+              "defaultValue": "31"
+            },
+            "itemSelection": {
+              "name": "Item_Selection",
+              "type": "viewModel",
+              "backingName": "Item",
+              "defaultValue": null
+            },
+            "itemValueIcon": {
+              "name": "Item_Value_Icon",
+              "type": "viewModel",
+              "backingName": "Item_Icon_Value",
+              "defaultValue": null
+            },
+            "priceValue": {
+              "name": "Price_Value",
+              "type": "number",
+              "backingName": "",
+              "defaultValue": "200"
+            },
+            "withValue": {
+              "name": "With",
+              "type": "number",
+              "backingName": "",
+              "defaultValue": "5182"
             }
           }
         }
-      }
-    },
-    "rating": {
-      "assets": {
-        
       },
       "artboards": {
-        "complete": {
-          "name": "Complete",
+        "button": {
+          "name": "Button",
+          "width": 861,
+          "height": 140,
+          "originX": 0,
+          "originY": 0,
+          "clip": false,
+          "defaultStateMachine": "State Machine 1",
+          "boundViewModel": "Rewards",
           "animations": {
-            "thumbnail": "Thumbnail",
-            "n5Stars": "5_stars",
-            "n4Stars": "4_stars",
-            "n3Stars": "3_stars",
-            "n2Stars": "2_stars",
-            "n1Star": "1_star",
-            "idleEmpty": "Idle_empty"
+            "buttonBase": {
+              "name": "Button_Base",
+              "fps": 60,
+              "durationSeconds": 1,
+              "loop": "oneShot",
+              "speed": 1
+            },
+            "hitboxcoins": {
+              "name": "HitboxCoins",
+              "fps": 60,
+              "durationSeconds": 2.41667,
+              "loop": "oneShot",
+              "speed": 1
+            },
+            "hitboxgems": {
+              "name": "HitboxGems",
+              "fps": 60,
+              "durationSeconds": 2.41667,
+              "loop": "oneShot",
+              "speed": 1
+            },
+            "idle": {
+              "name": "Idle",
+              "fps": 60,
+              "durationSeconds": 1,
+              "loop": "oneShot",
+              "speed": 1
+            },
+            "pressed": {
+              "name": "Pressed",
+              "fps": 60,
+              "durationSeconds": 0.166667,
+              "loop": "oneShot",
+              "speed": 1
+            },
+            "releasecoins": {
+              "name": "ReleaseCoins",
+              "fps": 60,
+              "durationSeconds": 2.41667,
+              "loop": "oneShot",
+              "speed": 1
+            },
+            "releasegems": {
+              "name": "ReleaseGems",
+              "fps": 60,
+              "durationSeconds": 2.41667,
+              "loop": "oneShot",
+              "speed": 1
+            },
+            "state1": {
+              "name": "State_1",
+              "fps": 60,
+              "durationSeconds": 1,
+              "loop": "oneShot",
+              "speed": 1
+            },
+            "state2": {
+              "name": "State_2",
+              "fps": 60,
+              "durationSeconds": 0.666667,
+              "loop": "loop",
+              "speed": 1
+            }
           },
           "textValueRuns": {
             
@@ -185,16 +298,795 @@
           "nestedTextValueRuns": [
             
           ],
+          "events": {
+            "increaseGems": {
+              "name": "Increase_Gems",
+              "type": "general",
+              
+              
+              "properties": {
+                
+              }
+            },
+            "increaseCoins": {
+              "name": "Increase_coins",
+              "type": "general",
+              
+              
+              "properties": {
+                
+              }
+            }
+          },
           "stateMachines": {
             "stateMachine1": {
               "name": "State Machine 1",
               "inputs": {
-                "rating": {
-                  "name": "Rating",
-                  "type": "number",
-                  "defaultValue": "0.000000"
+                
+              },
+              "states": [
+                {
+                  "name": "Button_Base",
+                  "type": "animation",
+                  "transitions": ["ReleaseCoins", "ReleaseGems"]
+                },
+                {
+                  "name": "HitboxCoins",
+                  "type": "animation",
+                  "transitions": []
+                },
+                {
+                  "name": "HitboxGems",
+                  "type": "animation",
+                  "transitions": []
+                },
+                {
+                  "name": "Idle",
+                  "type": "animation",
+                  "transitions": ["Pressed"]
+                },
+                {
+                  "name": "Pressed",
+                  "type": "animation",
+                  "transitions": ["Idle"]
+                },
+                {
+                  "name": "ReleaseCoins",
+                  "type": "animation",
+                  "transitions": []
+                },
+                {
+                  "name": "ReleaseGems",
+                  "type": "animation",
+                  "transitions": []
+                },
+                {
+                  "name": "State_1",
+                  "type": "animation",
+                  "transitions": ["State_2"]
+                },
+                {
+                  "name": "State_2",
+                  "type": "animation",
+                  "transitions": []
+                },
+                {
+                  "name": "any",
+                  "type": "any",
+                  "transitions": []
+                },
+                {
+                  "name": "any",
+                  "type": "any",
+                  "transitions": []
+                },
+                {
+                  "name": "any",
+                  "type": "any",
+                  "transitions": ["HitboxCoins", "HitboxGems"]
+                },
+                {
+                  "name": "any",
+                  "type": "any",
+                  "transitions": []
+                },
+                {
+                  "name": "entry",
+                  "type": "entry",
+                  "transitions": ["Idle"]
+                },
+                {
+                  "name": "entry",
+                  "type": "entry",
+                  "transitions": ["State_1"]
+                },
+                {
+                  "name": "entry",
+                  "type": "entry",
+                  "transitions": []
+                },
+                {
+                  "name": "entry",
+                  "type": "entry",
+                  "transitions": ["Button_Base"]
+                },
+                {
+                  "name": "exit",
+                  "type": "exit",
+                  "transitions": []
+                },
+                {
+                  "name": "exit",
+                  "type": "exit",
+                  "transitions": []
+                },
+                {
+                  "name": "exit",
+                  "type": "exit",
+                  "transitions": []
+                },
+                {
+                  "name": "exit",
+                  "type": "exit",
+                  "transitions": []
                 }
-              }
+              ]
+            }
+          }
+        },
+        "chest": {
+          "name": "Chest",
+          "width": 1078,
+          "height": 1642,
+          "originX": 0,
+          "originY": 0,
+          "clip": false,
+          "defaultStateMachine": "State Machine 1",
+          "boundViewModel": "Rewards",
+          "animations": {
+            "coin": {
+              "name": "Coin",
+              "fps": 60,
+              "durationSeconds": 1,
+              "loop": "oneShot",
+              "speed": 1
+            },
+            "gem": {
+              "name": "Gem",
+              "fps": 60,
+              "durationSeconds": 1,
+              "loop": "oneShot",
+              "speed": 1
+            },
+            "idle": {
+              "name": "Idle",
+              "fps": 60,
+              "durationSeconds": 1,
+              "loop": "loop",
+              "speed": 1
+            },
+            "itemsIdle": {
+              "name": "Items_Idle",
+              "fps": 60,
+              "durationSeconds": 1,
+              "loop": "oneShot",
+              "speed": 1
+            },
+            "itemsMove": {
+              "name": "Items_Move",
+              "fps": 60,
+              "durationSeconds": 2.41667,
+              "loop": "oneShot",
+              "speed": 1
+            },
+            "open": {
+              "name": "Open",
+              "fps": 60,
+              "durationSeconds": 1,
+              "loop": "oneShot",
+              "speed": 1
+            }
+          },
+          "textValueRuns": {
+            
+          },
+          "nestedTextValueRuns": [
+            
+          ],
+          "events": {
+            
+          },
+          "stateMachines": {
+            "stateMachine1": {
+              "name": "State Machine 1",
+              "inputs": {
+                
+              },
+              "states": [
+                {
+                  "name": "Coin",
+                  "type": "animation",
+                  "transitions": []
+                },
+                {
+                  "name": "Gem",
+                  "type": "animation",
+                  "transitions": []
+                },
+                {
+                  "name": "Idle",
+                  "type": "animation",
+                  "transitions": ["Open"]
+                },
+                {
+                  "name": "Items_Idle",
+                  "type": "animation",
+                  "transitions": ["Items_Move"]
+                },
+                {
+                  "name": "Items_Move",
+                  "type": "animation",
+                  "transitions": []
+                },
+                {
+                  "name": "Open",
+                  "type": "animation",
+                  "transitions": []
+                },
+                {
+                  "name": "any",
+                  "type": "any",
+                  "transitions": []
+                },
+                {
+                  "name": "any",
+                  "type": "any",
+                  "transitions": []
+                },
+                {
+                  "name": "any",
+                  "type": "any",
+                  "transitions": ["Coin", "Gem"]
+                },
+                {
+                  "name": "entry",
+                  "type": "entry",
+                  "transitions": ["Idle"]
+                },
+                {
+                  "name": "entry",
+                  "type": "entry",
+                  "transitions": ["Items_Idle"]
+                },
+                {
+                  "name": "entry",
+                  "type": "entry",
+                  "transitions": []
+                },
+                {
+                  "name": "exit",
+                  "type": "exit",
+                  "transitions": []
+                },
+                {
+                  "name": "exit",
+                  "type": "exit",
+                  "transitions": []
+                },
+                {
+                  "name": "exit",
+                  "type": "exit",
+                  "transitions": []
+                }
+              ]
+            }
+          }
+        },
+        "heart": {
+          "name": "Heart",
+          "width": 123,
+          "height": 123,
+          "originX": 0,
+          "originY": 0,
+          "clip": false,
+          "defaultStateMachine": "State Machine 1",
+          "boundViewModel": null,
+          "animations": {
+            "down": {
+              "name": "Down",
+              "fps": 60,
+              "durationSeconds": 1,
+              "loop": "oneShot",
+              "speed": 1
+            },
+            "horizontal": {
+              "name": "Horizontal",
+              "fps": 60,
+              "durationSeconds": 1,
+              "loop": "oneShot",
+              "speed": 1
+            },
+            "left": {
+              "name": "Left",
+              "fps": 60,
+              "durationSeconds": 1,
+              "loop": "oneShot",
+              "speed": 1
+            },
+            "top": {
+              "name": "Top",
+              "fps": 60,
+              "durationSeconds": 1,
+              "loop": "oneShot",
+              "speed": 1
+            },
+            "vertical": {
+              "name": "Vertical",
+              "fps": 60,
+              "durationSeconds": 1,
+              "loop": "oneShot",
+              "speed": 1
+            },
+            "right": {
+              "name": "right",
+              "fps": 60,
+              "durationSeconds": 1,
+              "loop": "oneShot",
+              "speed": 1
+            }
+          },
+          "textValueRuns": {
+            
+          },
+          "nestedTextValueRuns": [
+            
+          ],
+          "events": {
+            
+          },
+          "stateMachines": {
+            "stateMachine1": {
+              "name": "State Machine 1",
+              "inputs": {
+                "horizontal": {
+                  "name": "Horizontal",
+                  "type": "number",
+                  "defaultValue": "50.000000"
+                },
+                "vertical": {
+                  "name": "Vertical",
+                  "type": "number",
+                  "defaultValue": "50.000000"
+                }
+              },
+              "states": [
+                {
+                  "name": "",
+                  "type": "other",
+                  "transitions": []
+                },
+                {
+                  "name": "",
+                  "type": "other",
+                  "transitions": []
+                },
+                {
+                  "name": "any",
+                  "type": "any",
+                  "transitions": []
+                },
+                {
+                  "name": "any",
+                  "type": "any",
+                  "transitions": []
+                },
+                {
+                  "name": "entry",
+                  "type": "entry",
+                  "transitions": []
+                },
+                {
+                  "name": "entry",
+                  "type": "entry",
+                  "transitions": []
+                },
+                {
+                  "name": "exit",
+                  "type": "exit",
+                  "transitions": []
+                },
+                {
+                  "name": "exit",
+                  "type": "exit",
+                  "transitions": []
+                }
+              ]
+            }
+          }
+        },
+        "item": {
+          "name": "Item",
+          "width": 123,
+          "height": 123,
+          "originX": 0,
+          "originY": 0,
+          "clip": false,
+          "defaultStateMachine": "State Machine 1",
+          "boundViewModel": "Item",
+          "animations": {
+            "coin": {
+              "name": "Coin",
+              "fps": 60,
+              "durationSeconds": 1,
+              "loop": "oneShot",
+              "speed": 1
+            },
+            "down": {
+              "name": "Down",
+              "fps": 60,
+              "durationSeconds": 1,
+              "loop": "oneShot",
+              "speed": 1
+            },
+            "gem": {
+              "name": "Gem",
+              "fps": 60,
+              "durationSeconds": 1,
+              "loop": "oneShot",
+              "speed": 1
+            },
+            "horizontal": {
+              "name": "Horizontal",
+              "fps": 60,
+              "durationSeconds": 1,
+              "loop": "oneShot",
+              "speed": 1
+            },
+            "left": {
+              "name": "Left",
+              "fps": 60,
+              "durationSeconds": 1,
+              "loop": "oneShot",
+              "speed": 1
+            },
+            "scale0": {
+              "name": "Scale 0",
+              "fps": 60,
+              "durationSeconds": 1,
+              "loop": "oneShot",
+              "speed": 1
+            },
+            "scale100": {
+              "name": "Scale 100",
+              "fps": 60,
+              "durationSeconds": 1,
+              "loop": "oneShot",
+              "speed": 1
+            },
+            "top": {
+              "name": "Top",
+              "fps": 60,
+              "durationSeconds": 1,
+              "loop": "oneShot",
+              "speed": 1
+            },
+            "vertical": {
+              "name": "Vertical",
+              "fps": 60,
+              "durationSeconds": 1,
+              "loop": "oneShot",
+              "speed": 1
+            },
+            "right": {
+              "name": "right",
+              "fps": 60,
+              "durationSeconds": 1,
+              "loop": "oneShot",
+              "speed": 1
+            }
+          },
+          "textValueRuns": {
+            
+          },
+          "nestedTextValueRuns": [
+            
+          ],
+          "events": {
+            
+          },
+          "stateMachines": {
+            "stateMachine1": {
+              "name": "State Machine 1",
+              "inputs": {
+                "horizontal": {
+                  "name": "Horizontal",
+                  "type": "number",
+                  "defaultValue": "50.000000"
+                },
+                "vertical": {
+                  "name": "Vertical",
+                  "type": "number",
+                  "defaultValue": "50.000000"
+                },
+                "numscale": {
+                  "name": "numScale",
+                  "type": "number",
+                  "defaultValue": "100.000000"
+                }
+              },
+              "states": [
+                {
+                  "name": "",
+                  "type": "other",
+                  "transitions": []
+                },
+                {
+                  "name": "",
+                  "type": "other",
+                  "transitions": []
+                },
+                {
+                  "name": "",
+                  "type": "other",
+                  "transitions": []
+                },
+                {
+                  "name": "Coin",
+                  "type": "animation",
+                  "transitions": []
+                },
+                {
+                  "name": "Gem",
+                  "type": "animation",
+                  "transitions": []
+                },
+                {
+                  "name": "any",
+                  "type": "any",
+                  "transitions": []
+                },
+                {
+                  "name": "any",
+                  "type": "any",
+                  "transitions": []
+                },
+                {
+                  "name": "any",
+                  "type": "any",
+                  "transitions": ["Gem", "Coin"]
+                },
+                {
+                  "name": "any",
+                  "type": "any",
+                  "transitions": []
+                },
+                {
+                  "name": "entry",
+                  "type": "entry",
+                  "transitions": []
+                },
+                {
+                  "name": "entry",
+                  "type": "entry",
+                  "transitions": []
+                },
+                {
+                  "name": "entry",
+                  "type": "entry",
+                  "transitions": []
+                },
+                {
+                  "name": "entry",
+                  "type": "entry",
+                  "transitions": []
+                },
+                {
+                  "name": "exit",
+                  "type": "exit",
+                  "transitions": []
+                },
+                {
+                  "name": "exit",
+                  "type": "exit",
+                  "transitions": []
+                },
+                {
+                  "name": "exit",
+                  "type": "exit",
+                  "transitions": []
+                },
+                {
+                  "name": "exit",
+                  "type": "exit",
+                  "transitions": []
+                }
+              ]
+            }
+          }
+        },
+        "itemValue": {
+          "name": "Item Value",
+          "width": 227,
+          "height": 86,
+          "originX": 0,
+          "originY": 0,
+          "clip": false,
+          "defaultStateMachine": "State Machine 1",
+          "boundViewModel": "Item_Icon_Value",
+          "animations": {
+            "idle": {
+              "name": "Idle",
+              "fps": 60,
+              "durationSeconds": 1,
+              "loop": "oneShot",
+              "speed": 1
+            },
+            "jump": {
+              "name": "jump",
+              "fps": 60,
+              "durationSeconds": 1,
+              "loop": "oneShot",
+              "speed": 1
+            }
+          },
+          "textValueRuns": {
+            
+          },
+          "nestedTextValueRuns": [
+            
+          ],
+          "events": {
+            
+          },
+          "stateMachines": {
+            "stateMachine1": {
+              "name": "State Machine 1",
+              "inputs": {
+                
+              },
+              "states": [
+                {
+                  "name": "Idle",
+                  "type": "animation",
+                  "transitions": ["jump"]
+                },
+                {
+                  "name": "any",
+                  "type": "any",
+                  "transitions": []
+                },
+                {
+                  "name": "entry",
+                  "type": "entry",
+                  "transitions": ["Idle"]
+                },
+                {
+                  "name": "exit",
+                  "type": "exit",
+                  "transitions": []
+                },
+                {
+                  "name": "jump",
+                  "type": "animation",
+                  "transitions": ["Idle"]
+                }
+              ]
+            }
+          }
+        },
+        "lives2": {
+          "name": "Lives 2",
+          "width": 260,
+          "height": 86,
+          "originX": 0,
+          "originY": 0,
+          "clip": false,
+          "defaultStateMachine": "State Machine 1",
+          "boundViewModel": "Energy_Bar",
+          "animations": {
+            "timeline1": {
+              "name": "Timeline 1",
+              "fps": 60,
+              "durationSeconds": 1,
+              "loop": "oneShot",
+              "speed": 1
+            }
+          },
+          "textValueRuns": {
+            
+          },
+          "nestedTextValueRuns": [
+            
+          ],
+          "events": {
+            
+          },
+          "stateMachines": {
+            "stateMachine1": {
+              "name": "State Machine 1",
+              "inputs": {
+                
+              },
+              "states": [
+                {
+                  "name": "Timeline 1",
+                  "type": "animation",
+                  "transitions": []
+                },
+                {
+                  "name": "any",
+                  "type": "any",
+                  "transitions": []
+                },
+                {
+                  "name": "entry",
+                  "type": "entry",
+                  "transitions": ["Timeline 1"]
+                },
+                {
+                  "name": "exit",
+                  "type": "exit",
+                  "transitions": []
+                }
+              ]
+            }
+          }
+        },
+        "main": {
+          "name": "Main",
+          "width": 1330,
+          "height": 2606,
+          "originX": 0,
+          "originY": 0,
+          "clip": true,
+          "defaultStateMachine": "State Machine 1",
+          "boundViewModel": "Rewards",
+          "animations": {
+            "timeline1": {
+              "name": "Timeline 1",
+              "fps": 60,
+              "durationSeconds": 1,
+              "loop": "oneShot",
+              "speed": 1
+            }
+          },
+          "textValueRuns": {
+            
+          },
+          "nestedTextValueRuns": [
+            
+          ],
+          "events": {
+            
+          },
+          "stateMachines": {
+            "stateMachine1": {
+              "name": "State Machine 1",
+              "inputs": {
+                
+              },
+              "states": [
+                {
+                  "name": "Timeline 1",
+                  "type": "animation",
+                  "transitions": []
+                },
+                {
+                  "name": "any",
+                  "type": "any",
+                  "transitions": []
+                },
+                {
+                  "name": "entry",
+                  "type": "entry",
+                  "transitions": ["Timeline 1"]
+                },
+                {
+                  "name": "exit",
+                  "type": "exit",
+                  "transitions": []
+                }
+              ]
             }
           }
         }
@@ -206,6 +1098,10 @@
           "name": "Inter",
           "type": "font",
           "assetId": "594377",
+          "uniqueFilename": "Inter-594377.ttf",
+          "isEmbedded": true,
+          "width": 0,
+          "height": 0,
           "cdnUuid": "",
           "cdnBaseUrl": "https://public.rive.app/cdn/uuid"
         },
@@ -213,15 +1109,38 @@
           "name": "custom_image",
           "type": "image",
           "assetId": "2472778",
+          "uniqueFilename": "custom_image-2472778.png",
+          "isEmbedded": true,
+          "width": 800,
+          "height": 168,
           "cdnUuid": "",
           "cdnBaseUrl": "https://public.rive.app/cdn/uuid"
         }
       },
+      "enums": {
+        
+      },
+      "viewModels": {
+        
+      },
       "artboards": {
         "artboard": {
           "name": "Artboard",
+          "width": 500,
+          "height": 500,
+          "originX": 0,
+          "originY": 0,
+          "clip": true,
+          "defaultStateMachine": "State Machine 1",
+          "boundViewModel": null,
           "animations": {
-            "timeline1": "Timeline 1"
+            "timeline1": {
+              "name": "Timeline 1",
+              "fps": 60,
+              "durationSeconds": 1,
+              "loop": "oneShot",
+              "speed": 1
+            }
           },
           "textValueRuns": {
             
@@ -229,12 +1148,493 @@
           "nestedTextValueRuns": [
             
           ],
+          "events": {
+            "event": {
+              "name": "Event",
+              "type": "audio",
+              
+              "assetId": "4294967295",
+              "properties": {
+                
+              }
+            }
+          },
           "stateMachines": {
             "stateMachine1": {
               "name": "State Machine 1",
               "inputs": {
                 
-              }
+              },
+              "states": [
+                {
+                  "name": "Timeline 1",
+                  "type": "animation",
+                  "transitions": []
+                },
+                {
+                  "name": "any",
+                  "type": "any",
+                  "transitions": []
+                },
+                {
+                  "name": "entry",
+                  "type": "entry",
+                  "transitions": ["Timeline 1"]
+                },
+                {
+                  "name": "exit",
+                  "type": "exit",
+                  "transitions": []
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "nestedText": {
+      "assets": {
+        "inter": {
+          "name": "Inter",
+          "type": "font",
+          "assetId": "594377",
+          "uniqueFilename": "Inter-594377.ttf",
+          "isEmbedded": true,
+          "width": 0,
+          "height": 0,
+          "cdnUuid": "",
+          "cdnBaseUrl": "https://public.rive.app/cdn/uuid"
+        }
+      },
+      "enums": {
+        
+      },
+      "viewModels": {
+        
+      },
+      "artboards": {
+        "artboard1": {
+          "name": "Artboard1",
+          "width": 500,
+          "height": 500,
+          "originX": 0,
+          "originY": 0,
+          "clip": true,
+          "defaultStateMachine": "State Machine 1",
+          "boundViewModel": null,
+          "animations": {
+            "timeline1": {
+              "name": "Timeline 1",
+              "fps": 60,
+              "durationSeconds": 1,
+              "loop": "oneShot",
+              "speed": 1
+            }
+          },
+          "textValueRuns": {
+            "artboard1Textrun": {
+              "name": "Artboard1-TextRun",
+              "text": "Text on artboard 1",
+              "fontSize": 20,
+              "lineHeight": -1,
+              "letterSpacing": 0,
+              "fontAssetId": "0",
+              "align": "left",
+              "verticalAlign": "top",
+              "sizing": "autoWidth",
+              "overflow": "visible",
+              "wrap": "wrap"
+            }
+          },
+          "nestedTextValueRuns": [
+            {
+              "name": "Artboard2-TextRun",
+              "path": "NestedArtboard2"
+            },
+            {
+              "name": "Artboard3-TextRun",
+              "path": "NestedArtboard2/NestedArtboard3"
+            }
+          ],
+          "events": {
+            
+          },
+          "stateMachines": {
+            "stateMachine1": {
+              "name": "State Machine 1",
+              "inputs": {
+                
+              },
+              "states": [
+                {
+                  "name": "Timeline 1",
+                  "type": "animation",
+                  "transitions": []
+                },
+                {
+                  "name": "any",
+                  "type": "any",
+                  "transitions": []
+                },
+                {
+                  "name": "entry",
+                  "type": "entry",
+                  "transitions": ["Timeline 1"]
+                },
+                {
+                  "name": "exit",
+                  "type": "exit",
+                  "transitions": []
+                }
+              ]
+            }
+          }
+        },
+        "artboard2": {
+          "name": "Artboard2",
+          "width": 442,
+          "height": 436,
+          "originX": 0,
+          "originY": 0,
+          "clip": false,
+          "defaultStateMachine": "State Machine 1",
+          "boundViewModel": null,
+          "animations": {
+            "timeline1": {
+              "name": "Timeline 1",
+              "fps": 60,
+              "durationSeconds": 1,
+              "loop": "oneShot",
+              "speed": 1
+            }
+          },
+          "textValueRuns": {
+            "artboard2Textrun": {
+              "name": "Artboard2-TextRun",
+              "text": "Text on artboard 2",
+              "fontSize": 20,
+              "lineHeight": -1,
+              "letterSpacing": 0,
+              "fontAssetId": "0",
+              "align": "left",
+              "verticalAlign": "top",
+              "sizing": "autoWidth",
+              "overflow": "visible",
+              "wrap": "wrap"
+            }
+          },
+          "nestedTextValueRuns": [
+            {
+              "name": "Artboard3-TextRun",
+              "path": "NestedArtboard3"
+            }
+          ],
+          "events": {
+            
+          },
+          "stateMachines": {
+            "stateMachine1": {
+              "name": "State Machine 1",
+              "inputs": {
+                
+              },
+              "states": [
+                {
+                  "name": "Timeline 1",
+                  "type": "animation",
+                  "transitions": []
+                },
+                {
+                  "name": "any",
+                  "type": "any",
+                  "transitions": []
+                },
+                {
+                  "name": "entry",
+                  "type": "entry",
+                  "transitions": ["Timeline 1"]
+                },
+                {
+                  "name": "exit",
+                  "type": "exit",
+                  "transitions": []
+                }
+              ]
+            }
+          }
+        },
+        "artboard3": {
+          "name": "Artboard3",
+          "width": 378,
+          "height": 343,
+          "originX": 0,
+          "originY": 0,
+          "clip": false,
+          "defaultStateMachine": "State Machine 1",
+          "boundViewModel": null,
+          "animations": {
+            "timeline1": {
+              "name": "Timeline 1",
+              "fps": 60,
+              "durationSeconds": 1,
+              "loop": "oneShot",
+              "speed": 1
+            }
+          },
+          "textValueRuns": {
+            "artboard3Textrun": {
+              "name": "Artboard3-TextRun",
+              "text": "Text on artboard 3",
+              "fontSize": 20,
+              "lineHeight": -1,
+              "letterSpacing": 0,
+              "fontAssetId": "0",
+              "align": "left",
+              "verticalAlign": "top",
+              "sizing": "autoWidth",
+              "overflow": "visible",
+              "wrap": "wrap"
+            }
+          },
+          "nestedTextValueRuns": [
+            
+          ],
+          "events": {
+            
+          },
+          "stateMachines": {
+            "stateMachine1": {
+              "name": "State Machine 1",
+              "inputs": {
+                
+              },
+              "states": [
+                {
+                  "name": "Timeline 1",
+                  "type": "animation",
+                  "transitions": []
+                },
+                {
+                  "name": "any",
+                  "type": "any",
+                  "transitions": []
+                },
+                {
+                  "name": "entry",
+                  "type": "entry",
+                  "transitions": ["Timeline 1"]
+                },
+                {
+                  "name": "exit",
+                  "type": "exit",
+                  "transitions": []
+                }
+              ]
+            }
+          }
+        },
+        "artboarddonotfind": {
+          "name": "ArtboardDoNotFind",
+          "width": 187,
+          "height": 246,
+          "originX": 0,
+          "originY": 0,
+          "clip": false,
+          "defaultStateMachine": "State Machine 1",
+          "boundViewModel": null,
+          "animations": {
+            "timeline1": {
+              "name": "Timeline 1",
+              "fps": 60,
+              "durationSeconds": 1,
+              "loop": "oneShot",
+              "speed": 1
+            }
+          },
+          "textValueRuns": {
+            
+          },
+          "nestedTextValueRuns": [
+            
+          ],
+          "events": {
+            
+          },
+          "stateMachines": {
+            "stateMachine1": {
+              "name": "State Machine 1",
+              "inputs": {
+                
+              },
+              "states": [
+                {
+                  "name": "Timeline 1",
+                  "type": "animation",
+                  "transitions": []
+                },
+                {
+                  "name": "any",
+                  "type": "any",
+                  "transitions": []
+                },
+                {
+                  "name": "entry",
+                  "type": "entry",
+                  "transitions": ["Timeline 1"]
+                },
+                {
+                  "name": "exit",
+                  "type": "exit",
+                  "transitions": []
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "dbGenerator": {
+      "assets": {
+        
+      },
+      "enums": {
+        "pet": {
+          "name": "Pet",
+          "values": {
+            "cat": { "key": "Cat", "value": "" },
+            "dog": { "key": "Dog", "value": "" },
+            "snake": { "key": "Snake", "value": "" }
+          }
+        }
+      },
+      "viewModels": {
+        "person": {
+          "name": "Person",
+          "instanceNames": [
+            
+          ],
+          "properties": {
+            "age": {
+              "name": "age",
+              "type": "number",
+              "backingName": "",
+              "defaultValue": "0"
+            },
+            "color": {
+              "name": "color",
+              "type": "color",
+              "backingName": "",
+              "defaultValue": "-16777216"
+            },
+            "istall": {
+              "name": "isTall",
+              "type": "boolean",
+              "backingName": "",
+              "defaultValue": "false"
+            },
+            "jump": {
+              "name": "jump",
+              "type": "trigger",
+              "backingName": "",
+              "defaultValue": null
+            },
+            "myPet": {
+              "name": "my_pet",
+              "type": "viewModel",
+              "backingName": "Pet",
+              "defaultValue": null
+            },
+            "name": {
+              "name": "name",
+              "type": "string",
+              "backingName": "",
+              "defaultValue": ""
+            }
+          }
+        },
+        "pet": {
+          "name": "Pet",
+          "instanceNames": [
+            
+          ],
+          "properties": {
+            "age": {
+              "name": "age",
+              "type": "number",
+              "backingName": "",
+              "defaultValue": "0"
+            },
+            "name": {
+              "name": "name",
+              "type": "string",
+              "backingName": "",
+              "defaultValue": ""
+            },
+            "petType": {
+              "name": "pet_type",
+              "type": "enum",
+              "backingName": "Pet",
+              "defaultValue": "Snake"
+            }
+          }
+        }
+      },
+      "artboards": {
+        "artboard": {
+          "name": "Artboard",
+          "width": 500,
+          "height": 500,
+          "originX": 0,
+          "originY": 0,
+          "clip": false,
+          "defaultStateMachine": "State Machine 1",
+          "boundViewModel": "Person",
+          "animations": {
+            "timeline1": {
+              "name": "Timeline 1",
+              "fps": 60,
+              "durationSeconds": 1,
+              "loop": "oneShot",
+              "speed": 1
+            }
+          },
+          "textValueRuns": {
+            
+          },
+          "nestedTextValueRuns": [
+            
+          ],
+          "events": {
+            
+          },
+          "stateMachines": {
+            "stateMachine1": {
+              "name": "State Machine 1",
+              "inputs": {
+                
+              },
+              "states": [
+                {
+                  "name": "Timeline 1",
+                  "type": "animation",
+                  "transitions": []
+                },
+                {
+                  "name": "any",
+                  "type": "any",
+                  "transitions": []
+                },
+                {
+                  "name": "entry",
+                  "type": "entry",
+                  "transitions": ["Timeline 1"]
+                },
+                {
+                  "name": "exit",
+                  "type": "exit",
+                  "transitions": []
+                }
+              ]
             }
           }
         }
@@ -244,14 +1644,51 @@
       "assets": {
         
       },
+      "enums": {
+        
+      },
+      "viewModels": {
+        
+      },
       "artboards": {
         "newArtboard": {
           "name": "New Artboard",
+          "width": 1920,
+          "height": 1080,
+          "originX": 0,
+          "originY": 0,
+          "clip": true,
+          "defaultStateMachine": null,
+          "boundViewModel": null,
           "animations": {
-            "idleLight": "Idle light",
-            "idle": "Idle",
-            "work": "Work",
-            "insertData": "Insert_data"
+            "idle": {
+              "name": "Idle",
+              "fps": 60,
+              "durationSeconds": 2.7,
+              "loop": "loop",
+              "speed": 1
+            },
+            "idleLight": {
+              "name": "Idle light",
+              "fps": 60,
+              "durationSeconds": 1,
+              "loop": "oneShot",
+              "speed": 1
+            },
+            "insertData": {
+              "name": "Insert_data",
+              "fps": 60,
+              "durationSeconds": 3,
+              "loop": "loop",
+              "speed": 1
+            },
+            "work": {
+              "name": "Work",
+              "fps": 60,
+              "durationSeconds": 2.48333,
+              "loop": "oneShot",
+              "speed": 1
+            }
           },
           "textValueRuns": {
             
@@ -259,6 +1696,9 @@
           "nestedTextValueRuns": [
             
           ],
+          "events": {
+            
+          },
           "stateMachines": {
             "stateMachine1": {
               "name": "State Machine 1",
@@ -268,7 +1708,531 @@
                   "type": "trigger",
                   "defaultValue": "false"
                 }
+              },
+              "states": [
+                {
+                  "name": "Idle",
+                  "type": "animation",
+                  "transitions": []
+                },
+                {
+                  "name": "Idle light",
+                  "type": "animation",
+                  "transitions": ["Insert_data"]
+                },
+                {
+                  "name": "Insert_data",
+                  "type": "animation",
+                  "transitions": ["Work"]
+                },
+                {
+                  "name": "Work",
+                  "type": "animation",
+                  "transitions": ["Idle light"]
+                },
+                {
+                  "name": "any",
+                  "type": "any",
+                  "transitions": []
+                },
+                {
+                  "name": "any",
+                  "type": "any",
+                  "transitions": []
+                },
+                {
+                  "name": "entry",
+                  "type": "entry",
+                  "transitions": ["Idle"]
+                },
+                {
+                  "name": "entry",
+                  "type": "entry",
+                  "transitions": ["Idle light"]
+                },
+                {
+                  "name": "exit",
+                  "type": "exit",
+                  "transitions": []
+                },
+                {
+                  "name": "exit",
+                  "type": "exit",
+                  "transitions": []
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "rating": {
+      "assets": {
+        
+      },
+      "enums": {
+        
+      },
+      "viewModels": {
+        
+      },
+      "artboards": {
+        "complete": {
+          "name": "Complete",
+          "width": 500,
+          "height": 500,
+          "originX": 0,
+          "originY": 0,
+          "clip": true,
+          "defaultStateMachine": null,
+          "boundViewModel": null,
+          "animations": {
+            "n1Star": {
+              "name": "1_star",
+              "fps": 60,
+              "durationSeconds": 1,
+              "loop": "oneShot",
+              "speed": 1
+            },
+            "n2Stars": {
+              "name": "2_stars",
+              "fps": 60,
+              "durationSeconds": 1,
+              "loop": "oneShot",
+              "speed": 1
+            },
+            "n3Stars": {
+              "name": "3_stars",
+              "fps": 60,
+              "durationSeconds": 1,
+              "loop": "oneShot",
+              "speed": 1
+            },
+            "n4Stars": {
+              "name": "4_stars",
+              "fps": 60,
+              "durationSeconds": 1,
+              "loop": "oneShot",
+              "speed": 1
+            },
+            "n5Stars": {
+              "name": "5_stars",
+              "fps": 60,
+              "durationSeconds": 1,
+              "loop": "oneShot",
+              "speed": 1
+            },
+            "idleEmpty": {
+              "name": "Idle_empty",
+              "fps": 60,
+              "durationSeconds": 1,
+              "loop": "oneShot",
+              "speed": 1
+            },
+            "thumbnail": {
+              "name": "Thumbnail",
+              "fps": 60,
+              "durationSeconds": 6,
+              "loop": "loop",
+              "speed": 1
+            }
+          },
+          "textValueRuns": {
+            
+          },
+          "nestedTextValueRuns": [
+            
+          ],
+          "events": {
+            "rating": {
+              "name": "Rating",
+              "type": "general",
+              
+              
+              "properties": {
+                
               }
+            },
+            "gdhtrdeh": {
+              "name": "gdhtrdeh",
+              "type": "general",
+              
+              
+              "properties": {
+                
+              }
+            },
+            "star1active": {
+              "name": "star1Active",
+              "type": "general",
+              
+              
+              "properties": {
+                
+              }
+            }
+          },
+          "stateMachines": {
+            "stateMachine1": {
+              "name": "State Machine 1",
+              "inputs": {
+                "rating": {
+                  "name": "Rating",
+                  "type": "number",
+                  "defaultValue": "0.000000"
+                }
+              },
+              "states": [
+                {
+                  "name": "1_star",
+                  "type": "animation",
+                  "transitions": []
+                },
+                {
+                  "name": "1_star",
+                  "type": "animation",
+                  "transitions": []
+                },
+                {
+                  "name": "1_star",
+                  "type": "animation",
+                  "transitions": []
+                },
+                {
+                  "name": "2_stars",
+                  "type": "animation",
+                  "transitions": []
+                },
+                {
+                  "name": "2_stars",
+                  "type": "animation",
+                  "transitions": []
+                },
+                {
+                  "name": "2_stars",
+                  "type": "animation",
+                  "transitions": []
+                },
+                {
+                  "name": "3_stars",
+                  "type": "animation",
+                  "transitions": []
+                },
+                {
+                  "name": "4_stars",
+                  "type": "animation",
+                  "transitions": []
+                },
+                {
+                  "name": "5_stars",
+                  "type": "animation",
+                  "transitions": []
+                },
+                {
+                  "name": "Idle_empty",
+                  "type": "animation",
+                  "transitions": []
+                },
+                {
+                  "name": "any",
+                  "type": "any",
+                  "transitions": ["Idle_empty", "1_star", "2_stars", "3_stars", "4_stars", "5_stars"]
+                },
+                {
+                  "name": "any",
+                  "type": "any",
+                  "transitions": []
+                },
+                {
+                  "name": "any",
+                  "type": "any",
+                  "transitions": []
+                },
+                {
+                  "name": "entry",
+                  "type": "entry",
+                  "transitions": ["Idle_empty"]
+                },
+                {
+                  "name": "entry",
+                  "type": "entry",
+                  "transitions": []
+                },
+                {
+                  "name": "entry",
+                  "type": "entry",
+                  "transitions": []
+                },
+                {
+                  "name": "exit",
+                  "type": "exit",
+                  "transitions": []
+                },
+                {
+                  "name": "exit",
+                  "type": "exit",
+                  "transitions": []
+                },
+                {
+                  "name": "exit",
+                  "type": "exit",
+                  "transitions": []
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "textRuns": {
+      "assets": {
+        "inter": {
+          "name": "Inter",
+          "type": "font",
+          "assetId": "594377",
+          "uniqueFilename": "Inter-594377.ttf",
+          "isEmbedded": true,
+          "width": 0,
+          "height": 0,
+          "cdnUuid": "",
+          "cdnBaseUrl": "https://public.rive.app/cdn/uuid"
+        }
+      },
+      "enums": {
+        
+      },
+      "viewModels": {
+        
+      },
+      "artboards": {
+        "artboardNr1": {
+          "name": "Artboard-Nr1",
+          "width": 500,
+          "height": 500,
+          "originX": 0,
+          "originY": 0,
+          "clip": true,
+          "defaultStateMachine": "State Machine 1",
+          "boundViewModel": null,
+          "animations": {
+            "timeline1": {
+              "name": "Timeline 1",
+              "fps": 60,
+              "durationSeconds": 1,
+              "loop": "oneShot",
+              "speed": 1
+            }
+          },
+          "textValueRuns": {
+            "run1": {
+              "name": "Run 1",
+              "text": "Text run 1",
+              "fontSize": 20,
+              "lineHeight": -1,
+              "letterSpacing": 0,
+              "fontAssetId": "0",
+              "align": "left",
+              "verticalAlign": "top",
+              "sizing": "autoWidth",
+              "overflow": "visible",
+              "wrap": "wrap"
+            },
+            "run2": {
+              "name": "Run 2",
+              "text": "Text run 2\n",
+              "fontSize": 20,
+              "lineHeight": -1,
+              "letterSpacing": 0,
+              "fontAssetId": "0",
+              "align": "left",
+              "verticalAlign": "top",
+              "sizing": "autoWidth",
+              "overflow": "visible",
+              "wrap": "wrap"
+            },
+            "name": {
+              "name": "name",
+              "text": "gordon",
+              "fontSize": 20,
+              "lineHeight": -1,
+              "letterSpacing": 0,
+              "fontAssetId": "0",
+              "align": "left",
+              "verticalAlign": "top",
+              "sizing": "autoWidth",
+              "overflow": "visible",
+              "wrap": "wrap"
+            },
+            "surname": {
+              "name": "surname",
+              "text": "hayes",
+              "fontSize": 20,
+              "lineHeight": -1,
+              "letterSpacing": 0,
+              "fontAssetId": "0",
+              "align": "left",
+              "verticalAlign": "top",
+              "sizing": "autoWidth",
+              "overflow": "visible",
+              "wrap": "wrap"
+            }
+          },
+          "nestedTextValueRuns": [
+            
+          ],
+          "events": {
+            
+          },
+          "stateMachines": {
+            "stateMachine1": {
+              "name": "State Machine 1",
+              "inputs": {
+                
+              },
+              "states": [
+                {
+                  "name": "Timeline 1",
+                  "type": "animation",
+                  "transitions": []
+                },
+                {
+                  "name": "any",
+                  "type": "any",
+                  "transitions": []
+                },
+                {
+                  "name": "entry",
+                  "type": "entry",
+                  "transitions": ["Timeline 1"]
+                },
+                {
+                  "name": "exit",
+                  "type": "exit",
+                  "transitions": []
+                }
+              ]
+            }
+          }
+        },
+        "artboardNr2": {
+          "name": "Artboard-Nr2",
+          "width": 500,
+          "height": 500,
+          "originX": 0,
+          "originY": 0,
+          "clip": true,
+          "defaultStateMachine": "State Machine 1",
+          "boundViewModel": null,
+          "animations": {
+            "timeline1": {
+              "name": "Timeline 1",
+              "fps": 60,
+              "durationSeconds": 1,
+              "loop": "oneShot",
+              "speed": 1
+            }
+          },
+          "textValueRuns": {
+            "arboard2Unique": {
+              "name": "Arboard2-Unique",
+              "text": "Artboard 2 unique value",
+              "fontSize": 20,
+              "lineHeight": -1,
+              "letterSpacing": 0,
+              "fontAssetId": "0",
+              "align": "left",
+              "verticalAlign": "top",
+              "sizing": "autoWidth",
+              "overflow": "visible",
+              "wrap": "wrap"
+            },
+            "run1": {
+              "name": "Run 1",
+              "text": "Text run 1",
+              "fontSize": 20,
+              "lineHeight": -1,
+              "letterSpacing": 0,
+              "fontAssetId": "0",
+              "align": "left",
+              "verticalAlign": "top",
+              "sizing": "autoWidth",
+              "overflow": "visible",
+              "wrap": "wrap"
+            },
+            "run2": {
+              "name": "Run 2",
+              "text": "Text run 2\n",
+              "fontSize": 20,
+              "lineHeight": -1,
+              "letterSpacing": 0,
+              "fontAssetId": "0",
+              "align": "left",
+              "verticalAlign": "top",
+              "sizing": "autoWidth",
+              "overflow": "visible",
+              "wrap": "wrap"
+            },
+            "name": {
+              "name": "name",
+              "text": "gordon",
+              "fontSize": 20,
+              "lineHeight": -1,
+              "letterSpacing": 0,
+              "fontAssetId": "0",
+              "align": "left",
+              "verticalAlign": "top",
+              "sizing": "autoWidth",
+              "overflow": "visible",
+              "wrap": "wrap"
+            },
+            "surname": {
+              "name": "surname",
+              "text": "hayes",
+              "fontSize": 20,
+              "lineHeight": -1,
+              "letterSpacing": 0,
+              "fontAssetId": "0",
+              "align": "left",
+              "verticalAlign": "top",
+              "sizing": "autoWidth",
+              "overflow": "visible",
+              "wrap": "wrap"
+            }
+          },
+          "nestedTextValueRuns": [
+            
+          ],
+          "events": {
+            
+          },
+          "stateMachines": {
+            "stateMachine1": {
+              "name": "State Machine 1",
+              "inputs": {
+                
+              },
+              "states": [
+                {
+                  "name": "Timeline 1",
+                  "type": "animation",
+                  "transitions": []
+                },
+                {
+                  "name": "any",
+                  "type": "any",
+                  "transitions": []
+                },
+                {
+                  "name": "entry",
+                  "type": "entry",
+                  "transitions": ["Timeline 1"]
+                },
+                {
+                  "name": "exit",
+                  "type": "exit",
+                  "transitions": []
+                }
+              ]
             }
           }
         }

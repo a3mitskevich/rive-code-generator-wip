@@ -34,22 +34,27 @@ class _RatingArtboardComplete {
   const _RatingArtboardComplete();
 
   String get name => 'Complete';
+  double get width => 500;
+  double get height => 500;
+  
+  
 
   _RatingCompleteAnimations get animations => const _RatingCompleteAnimations();
   _RatingCompleteStateMachines get stateMachines => const _RatingCompleteStateMachines();
+  _RatingCompleteEvents get events => const _RatingCompleteEvents();
 }
 
 /// Container for animation names in the "complete" artboard.
 class _RatingCompleteAnimations {
   const _RatingCompleteAnimations();
 
-  String get thumbnail => 'Thumbnail';
-  String get n5Stars => '5_stars';
-  String get n4Stars => '4_stars';
-  String get n3Stars => '3_stars';
-  String get n2Stars => '2_stars';
   String get n1Star => '1_star';
+  String get n2Stars => '2_stars';
+  String get n3Stars => '3_stars';
+  String get n4Stars => '4_stars';
+  String get n5Stars => '5_stars';
   String get idleEmpty => 'Idle_empty';
+  String get thumbnail => 'Thumbnail';
 }
 
 /// Container for state machines in the "complete" artboard.
@@ -64,4 +69,13 @@ class _RatingCompletestateMachine1 {
   const _RatingCompletestateMachine1();
 
   String get name => 'State Machine 1';
+}
+
+/// Container for event names in the "complete" artboard.
+class _RatingCompleteEvents {
+  const _RatingCompleteEvents();
+
+  String get rating => 'Rating';
+  String get gdhtrdeh => 'gdhtrdeh';
+  String get star1active => 'star1Active';
 }
