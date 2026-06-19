@@ -919,7 +919,7 @@ static std::optional<RiveFileData> processRiveFile(const std::string& riveFilePa
             const auto& values = dataEnum->values();
             for (const auto* value : values)
             {
-                enumInfo.values.push_back({value->key()});
+                enumInfo.values.push_back({value->key(), value->value()});
             }
             fileData.enums.push_back(enumInfo);
         }
@@ -1380,6 +1380,7 @@ int main(int argc, char* argv[])
                 const auto& value = enumInfo.values[valueIndex];
                 kainjow::mustache::data valueData;
                 valueData["enum_value_key"] = value.key;
+                valueData["enum_value_value"] = value.value;
                 valueData["enum_value_camel_case"] = toCamelCase(value.key);
                 valueData["enum_value_pascal_case"] = toPascalCase(value.key);
                 valueData["enum_value_snake_case"] = toSnakeCase(value.key);
