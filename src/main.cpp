@@ -915,12 +915,25 @@ static std::vector<AssetInfo> getAssetsFromFile(rive::File* file)
         auto assetName = asset->name();
         auto uniqueAssetName = makeUnique(assetName, usedAssetNames);
 
-        assetsInfo.push_back(AssetInfo{uniqueAssetName,
-                                       assetType,
-                                       asset->fileExtension(),
-                                       std::to_string(asset->assetId()),
-                                       asset->cdnUuidStr(),
-                                       asset->cdnBaseUrl()});
+        AssetInfo info;
+        info.name = uniqueAssetName;
+        info.type = assetType;
+        info.fileExtension = asset->fileExtension();
+        info.assetId = std::to_string(asset->assetId());
+        info.cdnUuid = asset->cdnUuidStr();
+        info.cdnBaseUrl = asset->cdnBaseUrl();
+        info.uniqueFilename = asset->uniqueFilename();
+        // Embedded assets have no CDN UUID; CDN-referenced ones do.
+        info.isEmbedded = asset->cdnUuidStr().empty();
+
+        if (asset->coreType() == rive::ImageAsset::typeKey)
+        {
+            auto* image = static_cast<rive::ImageAsset*>(asset.get());
+            info.width = image->width();
+            info.height = image->height();
+        }
+
+        assetsInfo.push_back(info);
     }
     return assetsInfo;
 }
@@ -1580,6 +1593,10 @@ int main(int argc, char* argv[])
             assetData["asset_id"] = asset.assetId;
             assetData["asset_cdn_uuid"] = asset.cdnUuid;
             assetData["asset_cdn_base_url"] = asset.cdnBaseUrl;
+            assetData["asset_unique_filename"] = asset.uniqueFilename;
+            assetData.set("asset_is_embedded", asset.isEmbedded);
+            assetData["asset_width"] = formatNumber(asset.width);
+            assetData["asset_height"] = formatNumber(asset.height);
             assetData["last"] = (assetIndex == fileData.assets.size() - 1);
             assets.push_back(assetData);
         }
