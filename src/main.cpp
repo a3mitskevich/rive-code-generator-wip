@@ -933,42 +933,129 @@ static std::optional<RiveFileData> processRiveFile(const std::string& riveFilePa
         {
             ViewModelInfo viewModelInfo;
             viewModelInfo.name = viewModel->name();
+            viewModelInfo.instanceNames = viewModel->instanceNames();
+            std::sort(viewModelInfo.instanceNames.begin(),
+                      viewModelInfo.instanceNames.end());
+            // Resolve the view model definition for clean reference lookups
+            // (nested view models / enums) and a default instance for reading
+            // default property values via the runtime API.
+            rive::ViewModel* vmDef = riveFile->viewModel(viewModel->name());
+            auto defaultInstance = viewModel->createDefaultInstance();
+
+            auto readDefault = [&](const std::string& name,
+                                   const std::string& type,
+                                   PropertyInfo& pi) {
+                if (!defaultInstance)
+                {
+                    return;
+                }
+                if (type == "number")
+                {
+                    if (auto* v = defaultInstance->propertyNumber(name))
+                    {
+                        pi.defaultValue = formatNumber(v->value());
+                        pi.hasDefaultValue = true;
+                    }
+                }
+                else if (type == "string")
+                {
+                    if (auto* v = defaultInstance->propertyString(name))
+                    {
+                        pi.defaultValue = v->value();
+                        pi.hasDefaultValue = true;
+                    }
+                }
+                else if (type == "boolean")
+                {
+                    if (auto* v = defaultInstance->propertyBoolean(name))
+                    {
+                        pi.defaultValue = v->value() ? "true" : "false";
+                        pi.hasDefaultValue = true;
+                    }
+                }
+                else if (type == "color")
+                {
+                    if (auto* v = defaultInstance->propertyColor(name))
+                    {
+                        pi.defaultValue = std::to_string(v->value());
+                        pi.hasDefaultValue = true;
+                    }
+                }
+                else if (type == "enum")
+                {
+                    if (auto* v = defaultInstance->propertyEnum(name))
+                    {
+                        pi.defaultValue = v->value();
+                        pi.hasDefaultValue = true;
+                    }
+                }
+            };
+
             auto propertiesData = viewModel->properties();
             for (const auto& property : propertiesData)
             {
-                if (property.type == rive::DataType::viewModel)
+                PropertyInfo pi;
+                pi.name = property.name;
+                pi.type = dataTypeToString(property.type);
+
+                if (property.type == rive::DataType::viewModel && vmDef)
                 {
-                    // TODO: this is a hack
-                    auto nestedViewModel =
-                        viewModel->createInstance()->propertyViewModel(
-                            property.name);
-                    auto vm = nestedViewModel->instance()->viewModel();
-                    viewModelInfo.properties.push_back(
-                        {property.name,
-                         dataTypeToString(property.type),
-                         vm->name()});
+                    if (auto* prop = vmDef->property(property.name))
+                    {
+                        if (prop->is<rive::ViewModelPropertyViewModel>())
+                        {
+                            auto refId =
+                                prop->as<rive::ViewModelPropertyViewModel>()
+                                    ->viewModelReferenceId();
+                            if (auto* refVm = riveFile->viewModel(refId))
+                            {
+                                pi.backingName = refVm->name();
+                            }
+                        }
+                    }
                 }
-                else if (property.type == rive::DataType::enumType)
+                else if (property.type == rive::DataType::enumType && vmDef)
                 {
-                    // TODO: this is a hack
-                    auto vmi =
-                        riveFile->createViewModelInstance(viewModel->name());
-                    auto enum_instance =
-                        static_cast<rive::ViewModelInstanceEnum*>(
-                            vmi->propertyValue(property.name));
-                    auto enumProperty = enum_instance->viewModelProperty()
-                                            ->as<rive::ViewModelPropertyEnum>();
-                    auto enumName = enumProperty->dataEnum()->enumName();
-                    viewModelInfo.properties.push_back(
-                        {property.name,
-                         dataTypeToString(property.type),
-                         enumName});
+                    if (auto* prop = vmDef->property(property.name))
+                    {
+                        if (prop->is<rive::ViewModelPropertyEnum>())
+                        {
+                            if (auto* de =
+                                    prop->as<rive::ViewModelPropertyEnum>()
+                                        ->dataEnum())
+                            {
+                                pi.backingName = de->enumName();
+                            }
+                        }
+                    }
+                    readDefault(property.name, pi.type, pi);
+                }
+                else if (property.type == rive::DataType::list)
+                {
+                    // The item view-model type is not stored on the property
+                    // definition; best-effort read it from the default
+                    // instance's list items (empty by default => unknown).
+                    if (defaultInstance)
+                    {
+                        if (auto* list =
+                                defaultInstance->propertyList(property.name))
+                        {
+                            if (list->size() > 0)
+                            {
+                                if (auto item = list->instanceAt(0))
+                                {
+                                    pi.backingName = item->viewModelName();
+                                }
+                            }
+                        }
+                    }
                 }
                 else
                 {
-                    viewModelInfo.properties.push_back(
-                        {property.name, dataTypeToString(property.type)});
+                    readDefault(property.name, pi.type, pi);
                 }
+
+                viewModelInfo.properties.push_back(pi);
             }
             fileData.viewmodels.push_back(viewModelInfo);
         }
@@ -1325,6 +1412,22 @@ int main(int argc, char* argv[])
             viewmodelData["last"] =
                 (vmIndex == fileData.viewmodels.size() - 1);
 
+            std::vector<kainjow::mustache::data> instanceNames;
+            for (size_t instIndex = 0;
+                 instIndex < viewModel.instanceNames.size();
+                 instIndex++)
+            {
+                const auto& instName = viewModel.instanceNames[instIndex];
+                kainjow::mustache::data instData;
+                instData["instance_name"] = instName;
+                instData["instance_camel_case"] = toCamelCase(instName);
+                instData["instance_pascal_case"] = toPascalCase(instName);
+                instData["last"] =
+                    (instIndex == viewModel.instanceNames.size() - 1);
+                instanceNames.push_back(instData);
+            }
+            viewmodelData["instance_names"] = instanceNames;
+
             std::vector<kainjow::mustache::data> properties;
             for (size_t propIndex = 0;
                  propIndex < viewModel.properties.size();
@@ -1341,6 +1444,8 @@ int main(int argc, char* argv[])
                     toSnakeCase(property.name);
                 propertyData["property_kebab_case"] =
                     toKebabCase(property.name);
+                propertyData["property_default_value"] = property.defaultValue;
+                propertyData.set("has_default_value", property.hasDefaultValue);
 
                 // Add property type information for the viewmodel template
                 kainjow::mustache::data propertyTypeData;
@@ -1356,6 +1461,10 @@ int main(int argc, char* argv[])
                                        property.type == "boolean");
                 propertyTypeData.set("is_color", property.type == "color");
                 propertyTypeData.set("is_list", property.type == "list");
+                propertyTypeData.set("is_symbol_list_index",
+                                       property.type == "symbolListIndex");
+                propertyTypeData.set("is_asset_image",
+                                       property.type == "assetImage");
                 propertyTypeData.set("is_trigger",
                                        property.type == "trigger");
                 propertyTypeData.set("backing_name", property.backingName);
