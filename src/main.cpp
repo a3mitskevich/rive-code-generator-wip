@@ -89,6 +89,15 @@ struct TextValueRunInfo
 {
     std::string name;
     std::string defaultValue;
+    float fontSize = 0.f;
+    float lineHeight = 0.f;
+    float letterSpacing = 0.f;
+    std::string fontAssetId;
+    std::string align;         // left | right | center
+    std::string verticalAlign; // top | middle | bottom
+    std::string sizing;        // autoWidth | autoHeight | fixed
+    std::string overflow;      // visible | hidden | clipped | ellipsis | fit
+    std::string wrap;          // wrap | noWrap
 };
 
 struct NestedTextValueRunInfo
@@ -798,11 +807,39 @@ static std::vector<TextValueRunInfo> getTextValueRunsFromArtboard(
 
     for (auto textValueRun : textValueRuns)
     {
-        if (!textValueRun->name().empty())
+        if (textValueRun->name().empty())
         {
-            textValueRunsInfo.push_back(
-                {textValueRun->name(), textValueRun->text()});
+            continue;
         }
+
+        TextValueRunInfo info;
+        info.name = textValueRun->name();
+        info.defaultValue = textValueRun->text();
+
+        if (auto* style = textValueRun->style())
+        {
+            info.fontSize = style->fontSize();
+            info.lineHeight = style->lineHeight();
+            info.letterSpacing = style->letterSpacing();
+            info.fontAssetId = std::to_string(style->fontAssetId());
+        }
+
+        // Text-level alignment comes from the parent Text component.
+        if (auto* parent = textValueRun->parent())
+        {
+            if (parent->is<rive::Text>())
+            {
+                auto* text = parent->as<rive::Text>();
+                info.align = textAlignToString(text->align());
+                info.verticalAlign =
+                    verticalTextAlignToString(text->verticalAlign());
+                info.sizing = textSizingToString(text->sizing());
+                info.overflow = textOverflowToString(text->overflow());
+                info.wrap = textWrapToString(text->wrap());
+            }
+        }
+
+        textValueRunsInfo.push_back(info);
     }
     return textValueRunsInfo;
 }
@@ -1717,6 +1754,18 @@ int main(int argc, char* argv[])
                 tvrData["text_value_run_default"] = tvr.defaultValue;
                 tvrData["text_value_run_default_sanitized"] =
                     sanitizeString(tvr.defaultValue);
+                tvrData["text_value_run_font_size"] =
+                    formatNumber(tvr.fontSize);
+                tvrData["text_value_run_line_height"] =
+                    formatNumber(tvr.lineHeight);
+                tvrData["text_value_run_letter_spacing"] =
+                    formatNumber(tvr.letterSpacing);
+                tvrData["text_value_run_font_asset_id"] = tvr.fontAssetId;
+                tvrData["text_value_run_align"] = tvr.align;
+                tvrData["text_value_run_vertical_align"] = tvr.verticalAlign;
+                tvrData["text_value_run_sizing"] = tvr.sizing;
+                tvrData["text_value_run_overflow"] = tvr.overflow;
+                tvrData["text_value_run_wrap"] = tvr.wrap;
                 tvrData["last"] =
                     (tvrIndex == artboard.textValueRuns.size() - 1);
                 textValueRuns.push_back(tvrData);
