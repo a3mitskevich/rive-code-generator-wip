@@ -26,6 +26,40 @@
 #include "rive/viewmodel/data_enum_value.hpp"
 #include "rive/viewmodel/runtime/viewmodel_runtime.hpp"
 #include "rive/viewmodel/viewmodel_property_enum.hpp"
+#include "rive/animation/linear_animation.hpp"
+#include "rive/animation/loop.hpp"
+#include "rive/event.hpp"
+#include "rive/open_url_event.hpp"
+#include "rive/audio_event.hpp"
+#include "rive/custom_property_number.hpp"
+#include "rive/custom_property_boolean.hpp"
+#include "rive/custom_property_string.hpp"
+#include "rive/custom_property_color.hpp"
+#include "rive/custom_property_enum.hpp"
+#include "rive/custom_property_trigger.hpp"
+#include "rive/animation/state_machine_layer.hpp"
+#include "rive/animation/layer_state.hpp"
+#include "rive/animation/animation_state.hpp"
+#include "rive/animation/any_state.hpp"
+#include "rive/animation/entry_state.hpp"
+#include "rive/animation/exit_state.hpp"
+#include "rive/animation/state_transition.hpp"
+#include "rive/text/text.hpp"
+#include "rive/text/text_value_run.hpp"
+#include "rive/text/text_style.hpp"
+#include "rive/text/text_style_paint.hpp"
+#include "rive/text_engine.hpp"
+#include "rive/viewmodel/viewmodel.hpp"
+#include "rive/viewmodel/viewmodel_instance.hpp"
+#include "rive/viewmodel/viewmodel_instance_string.hpp"
+#include "rive/viewmodel/viewmodel_instance_number.hpp"
+#include "rive/viewmodel/viewmodel_instance_boolean.hpp"
+#include "rive/viewmodel/viewmodel_instance_color.hpp"
+#include "rive/viewmodel/viewmodel_instance_enum.hpp"
+#include "rive/viewmodel/viewmodel_instance_value.hpp"
+#include "rive/viewmodel/viewmodel_property_viewmodel.hpp"
+#include "rive/viewmodel/runtime/viewmodel_instance_runtime.hpp"
+#include "rive/viewmodel/runtime/viewmodel_instance_list_runtime.hpp"
 #include "utils/no_op_factory.hpp"
 
 const std::string generatedFileName = "rive_generated";
@@ -55,6 +89,15 @@ struct TextValueRunInfo
 {
     std::string name;
     std::string defaultValue;
+    float fontSize = 0.f;
+    float lineHeight = 0.f;
+    float letterSpacing = 0.f;
+    std::string fontAssetId;
+    std::string align;         // left | right | center
+    std::string verticalAlign; // top | middle | bottom
+    std::string sizing;        // autoWidth | autoHeight | fixed
+    std::string overflow;      // visible | hidden | clipped | ellipsis | fit
+    std::string wrap;          // wrap | noWrap
 };
 
 struct NestedTextValueRunInfo
@@ -71,11 +114,42 @@ struct AssetInfo
     std::string assetId;
     std::string cdnUuid;
     std::string cdnBaseUrl;
+    std::string uniqueFilename;
+    bool isEmbedded = false;
+    float width = 0.f;
+    float height = 0.f;
+};
+
+struct AnimationInfo
+{
+    std::string name;
+    uint32_t fps = 0;
+    float durationSeconds = 0.f;
+    std::string loop; // oneShot | loop | pingPong
+    float speed = 1.f;
+};
+
+struct EventPropertyInfo
+{
+    std::string name;
+    std::string type; // number | boolean | string | color | enum | trigger
+    std::string defaultValue;
+};
+
+struct EventInfo
+{
+    std::string name;
+    std::string type; // general | openUrl | audio
+    std::string url;
+    std::string target;
+    std::string assetId;
+    std::vector<EventPropertyInfo> properties;
 };
 
 struct EnumValueInfo
 {
     std::string key;
+    std::string value;
 };
 
 struct EnumInfo
@@ -89,12 +163,29 @@ struct PropertyInfo
     std::string name;
     std::string type;
     std::string backingName;
+    std::string defaultValue;
+    bool hasDefaultValue = false;
 };
 
 struct ViewModelInfo
 {
     std::string name;
     std::vector<PropertyInfo> properties;
+    std::vector<std::string> instanceNames;
+};
+
+struct StateInfo
+{
+    std::string name;
+    std::string type; // entry | exit | any | animation | other
+    std::vector<std::string> transitions; // target state names
+};
+
+struct StateMachineInfo
+{
+    std::string name;
+    std::vector<InputInfo> inputs;
+    std::vector<StateInfo> states;
 };
 
 struct ArtboardData
@@ -104,10 +195,20 @@ struct ArtboardData
     std::string artboardCameCase;
     std::string artboardSnakeCase;
     std::string artboardKebabCase;
-    std::vector<std::string> animations;
-    std::vector<std::pair<std::string, std::vector<InputInfo>>> stateMachines;
+    std::vector<AnimationInfo> animations;
+    std::vector<StateMachineInfo> stateMachines;
     std::vector<TextValueRunInfo> textValueRuns;
     std::vector<NestedTextValueRunInfo> nestedTextValueRuns;
+    std::vector<EventInfo> events;
+    float width = 0.f;
+    float height = 0.f;
+    float originX = 0.f;
+    float originY = 0.f;
+    bool clip = false;
+    bool hasDefaultStateMachine = false;
+    std::string defaultStateMachineName;
+    bool hasBoundViewModel = false;
+    std::string boundViewModelName;
 };
 
 struct RiveFileData
@@ -263,7 +364,143 @@ static std::string sanitizeString(const std::string& input)
     return output;
 }
 
-static rive::rcp<rive::File> openFile(const char name[])
+// Format a float without trailing zeros (e.g. 1920.0 -> "1920", 0.5 -> "0.5")
+static std::string formatNumber(float value)
+{
+    std::ostringstream out;
+    out << value;
+    return out.str();
+}
+
+static std::string loopToString(rive::Loop loop)
+{
+    switch (loop)
+    {
+        case rive::Loop::oneShot:
+            return "oneShot";
+        case rive::Loop::loop:
+            return "loop";
+        case rive::Loop::pingPong:
+            return "pingPong";
+        default:
+            return "oneShot";
+    }
+}
+
+static std::string textAlignToString(rive::TextAlign align)
+{
+    switch (align)
+    {
+        case rive::TextAlign::left:
+            return "left";
+        case rive::TextAlign::right:
+            return "right";
+        case rive::TextAlign::center:
+            return "center";
+        default:
+            return "left";
+    }
+}
+
+static std::string verticalTextAlignToString(rive::VerticalTextAlign align)
+{
+    switch (align)
+    {
+        case rive::VerticalTextAlign::top:
+            return "top";
+        case rive::VerticalTextAlign::middle:
+            return "middle";
+        case rive::VerticalTextAlign::bottom:
+            return "bottom";
+        default:
+            return "top";
+    }
+}
+
+static std::string textSizingToString(rive::TextSizing sizing)
+{
+    switch (sizing)
+    {
+        case rive::TextSizing::autoWidth:
+            return "autoWidth";
+        case rive::TextSizing::autoHeight:
+            return "autoHeight";
+        case rive::TextSizing::fixed:
+            return "fixed";
+        default:
+            return "autoWidth";
+    }
+}
+
+static std::string textOverflowToString(rive::TextOverflow overflow)
+{
+    switch (overflow)
+    {
+        case rive::TextOverflow::visible:
+            return "visible";
+        case rive::TextOverflow::hidden:
+            return "hidden";
+        case rive::TextOverflow::clipped:
+            return "clipped";
+        case rive::TextOverflow::ellipsis:
+            return "ellipsis";
+        case rive::TextOverflow::fit:
+            return "fit";
+        default:
+            return "visible";
+    }
+}
+
+static std::string textWrapToString(rive::TextWrap wrap)
+{
+    switch (wrap)
+    {
+        case rive::TextWrap::wrap:
+            return "wrap";
+        case rive::TextWrap::noWrap:
+            return "noWrap";
+        default:
+            return "wrap";
+    }
+}
+
+// Display name + kind for a state-machine layer state.
+static void describeLayerState(const rive::LayerState* state,
+                               std::string& outName,
+                               std::string& outType)
+{
+    if (state->is<rive::AnimationState>())
+    {
+        outType = "animation";
+        const auto* animState = state->as<rive::AnimationState>();
+        if (const auto* anim = animState->animation())
+        {
+            outName = anim->name();
+        }
+    }
+    else if (state->is<rive::AnyState>())
+    {
+        outType = "any";
+        outName = "any";
+    }
+    else if (state->is<rive::EntryState>())
+    {
+        outType = "entry";
+        outName = "entry";
+    }
+    else if (state->is<rive::ExitState>())
+    {
+        outType = "exit";
+        outName = "exit";
+    }
+    else
+    {
+        outType = "other";
+    }
+}
+
+static rive::rcp<rive::File> openFile(const char name[],
+                                     rive::ImportResult* importResult)
 {
     FILE* f = fopen(name, "rb");
     if (!f)
@@ -279,40 +516,151 @@ static rive::rcp<rive::File> openFile(const char name[])
 
     if (fread(bytes.data(), 1, length, f) != length)
     {
+        fclose(f);
         printf("Failed to read file into bytes array\n");
         return nullptr;
     }
+    fclose(f);
 
     static rive::NoOpFactory gFactory;
-    return rive::File::import(bytes, &gFactory);
+    return rive::File::import(bytes, &gFactory, importResult);
 }
 
-static std::vector<std::string> getAnimationsFromArtboard(
+static std::vector<AnimationInfo> getAnimationsFromArtboard(
     rive::ArtboardInstance* artboard)
 {
-    std::vector<std::string> animations;
+    std::vector<AnimationInfo> animations;
     auto animationCount = artboard->animationCount();
     for (int i = 0; i < animationCount; i++)
     {
-        auto animation = artboard->animationAt(i);
-        animations.push_back(animation->name());
+        auto animationInstance = artboard->animationAt(i);
+        AnimationInfo info;
+        info.name = animationInstance->name();
+        if (const auto* animation = animationInstance->animation())
+        {
+            info.fps = animation->fps();
+            info.durationSeconds = animation->durationSeconds();
+            info.loop = loopToString(animation->loop());
+            info.speed = animation->speed();
+        }
+        animations.push_back(info);
     }
     return animations;
 }
 
-static std::vector<std::pair<std::string, std::vector<InputInfo>>>
+static std::vector<EventInfo> getEventsFromArtboard(
+    rive::ArtboardInstance* artboard)
+{
+    std::vector<EventInfo> eventsInfo;
+    std::vector<rive::Event*> events = artboard->find<rive::Event>();
+
+    for (auto* event : events)
+    {
+        if (event->name().empty())
+        {
+            continue;
+        }
+
+        EventInfo info;
+        info.name = event->name();
+
+        if (event->is<rive::OpenUrlEvent>())
+        {
+            auto* openUrl = event->as<rive::OpenUrlEvent>();
+            info.type = "openUrl";
+            info.url = openUrl->url();
+            info.target = std::to_string(openUrl->targetValue());
+        }
+        else if (event->is<rive::AudioEvent>())
+        {
+            auto* audio = event->as<rive::AudioEvent>();
+            info.type = "audio";
+            info.assetId = std::to_string(audio->assetId());
+        }
+        else
+        {
+            info.type = "general";
+        }
+
+        for (auto* prop : event->customProperties())
+        {
+            if (prop->name().empty())
+            {
+                continue;
+            }
+            EventPropertyInfo propInfo;
+            propInfo.name = prop->name();
+
+            switch (prop->coreType())
+            {
+                case rive::CustomPropertyNumberBase::typeKey:
+                    propInfo.type = "number";
+                    propInfo.defaultValue = formatNumber(
+                        prop->as<rive::CustomPropertyNumber>()->propertyValue());
+                    break;
+                case rive::CustomPropertyBooleanBase::typeKey:
+                    propInfo.type = "boolean";
+                    propInfo.defaultValue =
+                        prop->as<rive::CustomPropertyBoolean>()->propertyValue()
+                            ? "true"
+                            : "false";
+                    break;
+                case rive::CustomPropertyStringBase::typeKey:
+                    propInfo.type = "string";
+                    propInfo.defaultValue =
+                        prop->as<rive::CustomPropertyString>()->propertyValue();
+                    break;
+                case rive::CustomPropertyColorBase::typeKey:
+                    propInfo.type = "color";
+                    propInfo.defaultValue = std::to_string(
+                        prop->as<rive::CustomPropertyColor>()->propertyValue());
+                    break;
+                case rive::CustomPropertyEnumBase::typeKey:
+                    propInfo.type = "enum";
+                    propInfo.defaultValue = std::to_string(
+                        prop->as<rive::CustomPropertyEnum>()->propertyValue());
+                    break;
+                case rive::CustomPropertyTriggerBase::typeKey:
+                    propInfo.type = "trigger";
+                    propInfo.defaultValue = "";
+                    break;
+                default:
+                    propInfo.type = "unknown";
+                    propInfo.defaultValue = "";
+                    break;
+            }
+            info.properties.push_back(propInfo);
+        }
+
+        std::sort(info.properties.begin(), info.properties.end(),
+                  [](const EventPropertyInfo& a, const EventPropertyInfo& b) {
+                      return a.name < b.name;
+                  });
+
+        eventsInfo.push_back(info);
+    }
+
+    std::sort(eventsInfo.begin(), eventsInfo.end(),
+              [](const EventInfo& a, const EventInfo& b) {
+                  return a.name < b.name;
+              });
+
+    return eventsInfo;
+}
+
+static std::vector<StateMachineInfo>
 getStateMachinesFromArtboard(rive::ArtboardInstance* artboard)
 {
-    std::vector<std::pair<std::string, std::vector<InputInfo>>> stateMachines;
+    std::vector<StateMachineInfo> stateMachines;
     auto stateMachineCount = artboard->stateMachineCount();
-    for (int i = 0; i < stateMachineCount; i++)
+    for (size_t i = 0; i < stateMachineCount; i++)
     {
         auto stateMachine = artboard->stateMachineAt(i);
-        std::string stateMachineName = stateMachine->name();
+        StateMachineInfo smInfo;
+        smInfo.name = stateMachine->name();
 
-        std::vector<InputInfo> inputs;
         auto inputCount = stateMachine->inputCount();
-        for (int j = 0; j < inputCount; j++)
+        for (size_t j = 0; j < inputCount; j++)
         {
             auto input = stateMachine->input(j);
 
@@ -350,10 +698,50 @@ getStateMachinesFromArtboard(rive::ArtboardInstance* artboard)
                 }
             }
 
-            inputs.push_back({input->name(), inputType, defaultValue});
+            smInfo.inputs.push_back({input->name(), inputType, defaultValue});
         }
 
-        stateMachines.emplace_back(stateMachineName, inputs);
+        // States and transitions from the state machine definition.
+        if (const auto* definition = artboard->stateMachine(i))
+        {
+            for (size_t l = 0; l < definition->layerCount(); l++)
+            {
+                const auto* layer = definition->layer(l);
+                if (!layer)
+                {
+                    continue;
+                }
+                for (size_t s = 0; s < layer->stateCount(); s++)
+                {
+                    const auto* state = layer->state(s);
+                    if (!state)
+                    {
+                        continue;
+                    }
+                    StateInfo stateInfo;
+                    describeLayerState(state, stateInfo.name, stateInfo.type);
+
+                    for (size_t t = 0; t < state->transitionCount(); t++)
+                    {
+                        const auto* transition = state->transition(t);
+                        if (transition && transition->stateTo())
+                        {
+                            std::string toName, toType;
+                            describeLayerState(transition->stateTo(),
+                                               toName,
+                                               toType);
+                            if (!toName.empty())
+                            {
+                                stateInfo.transitions.push_back(toName);
+                            }
+                        }
+                    }
+                    smInfo.states.push_back(stateInfo);
+                }
+            }
+        }
+
+        stateMachines.push_back(smInfo);
     }
     return stateMachines;
 }
@@ -419,11 +807,39 @@ static std::vector<TextValueRunInfo> getTextValueRunsFromArtboard(
 
     for (auto textValueRun : textValueRuns)
     {
-        if (!textValueRun->name().empty())
+        if (textValueRun->name().empty())
         {
-            textValueRunsInfo.push_back(
-                {textValueRun->name(), textValueRun->text()});
+            continue;
         }
+
+        TextValueRunInfo info;
+        info.name = textValueRun->name();
+        info.defaultValue = textValueRun->text();
+
+        if (auto* style = textValueRun->style())
+        {
+            info.fontSize = style->fontSize();
+            info.lineHeight = style->lineHeight();
+            info.letterSpacing = style->letterSpacing();
+            info.fontAssetId = std::to_string(style->fontAssetId());
+        }
+
+        // Text-level alignment comes from the parent Text component.
+        if (auto* parent = textValueRun->parent())
+        {
+            if (parent->is<rive::Text>())
+            {
+                auto* text = parent->as<rive::Text>();
+                info.align = textAlignToString(text->align());
+                info.verticalAlign =
+                    verticalTextAlignToString(text->verticalAlign());
+                info.sizing = textSizingToString(text->sizing());
+                info.overflow = textOverflowToString(text->overflow());
+                info.wrap = textWrapToString(text->wrap());
+            }
+        }
+
+        textValueRunsInfo.push_back(info);
     }
     return textValueRunsInfo;
 }
@@ -499,12 +915,25 @@ static std::vector<AssetInfo> getAssetsFromFile(rive::File* file)
         auto assetName = asset->name();
         auto uniqueAssetName = makeUnique(assetName, usedAssetNames);
 
-        assetsInfo.push_back(AssetInfo{uniqueAssetName,
-                                       assetType,
-                                       asset->fileExtension(),
-                                       std::to_string(asset->assetId()),
-                                       asset->cdnUuidStr(),
-                                       asset->cdnBaseUrl()});
+        AssetInfo info;
+        info.name = uniqueAssetName;
+        info.type = assetType;
+        info.fileExtension = asset->fileExtension();
+        info.assetId = std::to_string(asset->assetId());
+        info.cdnUuid = asset->cdnUuidStr();
+        info.cdnBaseUrl = asset->cdnBaseUrl();
+        info.uniqueFilename = asset->uniqueFilename();
+        // Embedded assets have no CDN UUID; CDN-referenced ones do.
+        info.isEmbedded = asset->cdnUuidStr().empty();
+
+        if (asset->coreType() == rive::ImageAsset::typeKey)
+        {
+            auto* image = static_cast<rive::ImageAsset*>(asset.get());
+            info.width = image->width();
+            info.height = image->height();
+        }
+
+        assetsInfo.push_back(info);
     }
     return assetsInfo;
 }
@@ -551,10 +980,27 @@ static std::optional<RiveFileData> processRiveFile(const std::string& riveFilePa
         return std::nullopt;
     }
 
-    auto riveFile = openFile(riveFilePath.c_str());
+    rive::ImportResult importResult = rive::ImportResult::malformed;
+    auto riveFile = openFile(riveFilePath.c_str(), &importResult);
     if (!riveFile)
     {
-        console::error("Failed to parse Rive file: " + riveFilePath);
+        switch (importResult)
+        {
+            case rive::ImportResult::unsupportedVersion:
+                console::error(
+                    "Unsupported Rive runtime version (generator supports up "
+                    "to " +
+                    std::to_string(rive::File::majorVersion) + "." +
+                    std::to_string(rive::File::minorVersion) + "): " +
+                    riveFilePath);
+                break;
+            case rive::ImportResult::malformed:
+                console::error("Malformed Rive file: " + riveFilePath);
+                break;
+            default:
+                console::error("Failed to parse Rive file: " + riveFilePath);
+                break;
+        }
         return std::nullopt;
     }
 
@@ -580,7 +1026,7 @@ static std::optional<RiveFileData> processRiveFile(const std::string& riveFilePa
             const auto& values = dataEnum->values();
             for (const auto* value : values)
             {
-                enumInfo.values.push_back({value->key()});
+                enumInfo.values.push_back({value->key(), value->value()});
             }
             fileData.enums.push_back(enumInfo);
         }
@@ -594,42 +1040,129 @@ static std::optional<RiveFileData> processRiveFile(const std::string& riveFilePa
         {
             ViewModelInfo viewModelInfo;
             viewModelInfo.name = viewModel->name();
+            viewModelInfo.instanceNames = viewModel->instanceNames();
+            std::sort(viewModelInfo.instanceNames.begin(),
+                      viewModelInfo.instanceNames.end());
+            // Resolve the view model definition for clean reference lookups
+            // (nested view models / enums) and a default instance for reading
+            // default property values via the runtime API.
+            rive::ViewModel* vmDef = riveFile->viewModel(viewModel->name());
+            auto defaultInstance = viewModel->createDefaultInstance();
+
+            auto readDefault = [&](const std::string& name,
+                                   const std::string& type,
+                                   PropertyInfo& pi) {
+                if (!defaultInstance)
+                {
+                    return;
+                }
+                if (type == "number")
+                {
+                    if (auto* v = defaultInstance->propertyNumber(name))
+                    {
+                        pi.defaultValue = formatNumber(v->value());
+                        pi.hasDefaultValue = true;
+                    }
+                }
+                else if (type == "string")
+                {
+                    if (auto* v = defaultInstance->propertyString(name))
+                    {
+                        pi.defaultValue = v->value();
+                        pi.hasDefaultValue = true;
+                    }
+                }
+                else if (type == "boolean")
+                {
+                    if (auto* v = defaultInstance->propertyBoolean(name))
+                    {
+                        pi.defaultValue = v->value() ? "true" : "false";
+                        pi.hasDefaultValue = true;
+                    }
+                }
+                else if (type == "color")
+                {
+                    if (auto* v = defaultInstance->propertyColor(name))
+                    {
+                        pi.defaultValue = std::to_string(v->value());
+                        pi.hasDefaultValue = true;
+                    }
+                }
+                else if (type == "enum")
+                {
+                    if (auto* v = defaultInstance->propertyEnum(name))
+                    {
+                        pi.defaultValue = v->value();
+                        pi.hasDefaultValue = true;
+                    }
+                }
+            };
+
             auto propertiesData = viewModel->properties();
             for (const auto& property : propertiesData)
             {
-                if (property.type == rive::DataType::viewModel)
+                PropertyInfo pi;
+                pi.name = property.name;
+                pi.type = dataTypeToString(property.type);
+
+                if (property.type == rive::DataType::viewModel && vmDef)
                 {
-                    // TODO: this is a hack
-                    auto nestedViewModel =
-                        viewModel->createInstance()->propertyViewModel(
-                            property.name);
-                    auto vm = nestedViewModel->instance()->viewModel();
-                    viewModelInfo.properties.push_back(
-                        {property.name,
-                         dataTypeToString(property.type),
-                         vm->name()});
+                    if (auto* prop = vmDef->property(property.name))
+                    {
+                        if (prop->is<rive::ViewModelPropertyViewModel>())
+                        {
+                            auto refId =
+                                prop->as<rive::ViewModelPropertyViewModel>()
+                                    ->viewModelReferenceId();
+                            if (auto* refVm = riveFile->viewModel(refId))
+                            {
+                                pi.backingName = refVm->name();
+                            }
+                        }
+                    }
                 }
-                else if (property.type == rive::DataType::enumType)
+                else if (property.type == rive::DataType::enumType && vmDef)
                 {
-                    // TODO: this is a hack
-                    auto vmi =
-                        riveFile->createViewModelInstance(viewModel->name());
-                    auto enum_instance =
-                        static_cast<rive::ViewModelInstanceEnum*>(
-                            vmi->propertyValue(property.name));
-                    auto enumProperty = enum_instance->viewModelProperty()
-                                            ->as<rive::ViewModelPropertyEnum>();
-                    auto enumName = enumProperty->dataEnum()->enumName();
-                    viewModelInfo.properties.push_back(
-                        {property.name,
-                         dataTypeToString(property.type),
-                         enumName});
+                    if (auto* prop = vmDef->property(property.name))
+                    {
+                        if (prop->is<rive::ViewModelPropertyEnum>())
+                        {
+                            if (auto* de =
+                                    prop->as<rive::ViewModelPropertyEnum>()
+                                        ->dataEnum())
+                            {
+                                pi.backingName = de->enumName();
+                            }
+                        }
+                    }
+                    readDefault(property.name, pi.type, pi);
+                }
+                else if (property.type == rive::DataType::list)
+                {
+                    // The item view-model type is not stored on the property
+                    // definition; best-effort read it from the default
+                    // instance's list items (empty by default => unknown).
+                    if (defaultInstance)
+                    {
+                        if (auto* list =
+                                defaultInstance->propertyList(property.name))
+                        {
+                            if (list->size() > 0)
+                            {
+                                if (auto item = list->instanceAt(0))
+                                {
+                                    pi.backingName = item->viewModelName();
+                                }
+                            }
+                        }
+                    }
                 }
                 else
                 {
-                    viewModelInfo.properties.push_back(
-                        {property.name, dataTypeToString(property.type)});
+                    readDefault(property.name, pi.type, pi);
                 }
+
+                viewModelInfo.properties.push_back(pi);
             }
             fileData.viewmodels.push_back(viewModelInfo);
         }
@@ -652,24 +1185,54 @@ static std::optional<RiveFileData> processRiveFile(const std::string& riveFilePa
         artboardCameCase =
             makeUnique(artboardCameCase, usedArtboardNames);
 
-        std::vector<std::string> animations =
+        std::vector<AnimationInfo> animations =
             getAnimationsFromArtboard(artboard.get());
-        std::vector<std::pair<std::string, std::vector<InputInfo>>>
-            stateMachines = getStateMachinesFromArtboard(artboard.get());
+        std::vector<StateMachineInfo> stateMachines =
+            getStateMachinesFromArtboard(artboard.get());
         std::vector<TextValueRunInfo> textValueRuns =
             getTextValueRunsFromArtboard(artboard.get());
         std::vector<NestedTextValueRunInfo> nestedTextValueRuns =
             getNestedTextValueRunPathsFromArtboard(artboard.get());
+        std::vector<EventInfo> events = getEventsFromArtboard(artboard.get());
 
-        fileData.artboards.push_back({artboardName,
-                                       artboardPascalCase,
-                                       artboardCameCase,
-                                       artboardSnakeCase,
-                                       artboardKebabCase,
-                                       animations,
-                                       stateMachines,
-                                       textValueRuns,
-                                       nestedTextValueRuns});
+        ArtboardData artboardData;
+        artboardData.artboardName = artboardName;
+        artboardData.artboardPascalCase = artboardPascalCase;
+        artboardData.artboardCameCase = artboardCameCase;
+        artboardData.artboardSnakeCase = artboardSnakeCase;
+        artboardData.artboardKebabCase = artboardKebabCase;
+        artboardData.animations = animations;
+        artboardData.stateMachines = stateMachines;
+        artboardData.textValueRuns = textValueRuns;
+        artboardData.nestedTextValueRuns = nestedTextValueRuns;
+        artboardData.events = events;
+        artboardData.width = artboard->originalWidth();
+        artboardData.height = artboard->originalHeight();
+        artboardData.originX = artboard->originX();
+        artboardData.originY = artboard->originY();
+        artboardData.clip = artboard->clip();
+
+        // Default state machine (defaultStateMachineId is an index into the
+        // artboard's state machines; unset values fall outside the range).
+        auto defaultSmId = artboard->defaultStateMachineId();
+        if (defaultSmId < artboard->stateMachineCount())
+        {
+            if (auto sm = artboard->stateMachineAt(defaultSmId))
+            {
+                artboardData.hasDefaultStateMachine = true;
+                artboardData.defaultStateMachineName = sm->name();
+            }
+        }
+
+        // Bound (default) view model for this artboard, if any.
+        if (auto* boundVm =
+                riveFile->defaultArtboardViewModel(artboard.get()))
+        {
+            artboardData.hasBoundViewModel = true;
+            artboardData.boundViewModelName = boundVm->name();
+        }
+
+        fileData.artboards.push_back(artboardData);
     }
 
     // Sort all collections alphabetically for deterministic output
@@ -708,16 +1271,23 @@ static std::optional<RiveFileData> processRiveFile(const std::string& riveFilePa
               });
     for (auto& artboard : fileData.artboards)
     {
-        std::sort(artboard.animations.begin(), artboard.animations.end());
+        std::sort(artboard.animations.begin(), artboard.animations.end(),
+                  [](const AnimationInfo& a, const AnimationInfo& b) {
+                      return a.name < b.name;
+                  });
 
         std::sort(artboard.stateMachines.begin(), artboard.stateMachines.end(),
-                  [](const auto& a, const auto& b) {
-                      return a.first < b.first;
+                  [](const StateMachineInfo& a, const StateMachineInfo& b) {
+                      return a.name < b.name;
                   });
-        for (auto& [smName, inputs] : artboard.stateMachines)
+        for (auto& sm : artboard.stateMachines)
         {
-            std::sort(inputs.begin(), inputs.end(),
+            std::sort(sm.inputs.begin(), sm.inputs.end(),
                       [](const InputInfo& a, const InputInfo& b) {
+                          return a.name < b.name;
+                      });
+            std::sort(sm.states.begin(), sm.states.end(),
+                      [](const StateInfo& a, const StateInfo& b) {
                           return a.name < b.name;
                       });
         }
@@ -828,14 +1398,18 @@ int main(int argc, char* argv[])
     std::vector<RiveFileData> riveFileDataList;
     for (const auto& riv_file : riveFiles)
     {
+        // Print the file name BEFORE parsing so any warnings emitted by the
+        // runtime importer (e.g. duplicate asset content, written to stderr)
+        // are clearly attributed to the file currently being processed.
+        std::filesystem::path p(riv_file);
+        console::step(p.filename().string());
+
         auto result = processRiveFile(riv_file);
         if (result)
         {
             riveFileDataList.push_back(*result);
 
             const auto& fd = *result;
-            std::filesystem::path p(riv_file);
-            console::step(p.filename().string());
 
             int numArtboards = (int)fd.artboards.size();
             int numAnimations = 0;
@@ -917,6 +1491,7 @@ int main(int argc, char* argv[])
                 const auto& value = enumInfo.values[valueIndex];
                 kainjow::mustache::data valueData;
                 valueData["enum_value_key"] = value.key;
+                valueData["enum_value_value"] = value.value;
                 valueData["enum_value_camel_case"] = toCamelCase(value.key);
                 valueData["enum_value_pascal_case"] = toPascalCase(value.key);
                 valueData["enum_value_snake_case"] = toSnakeCase(value.key);
@@ -949,6 +1524,22 @@ int main(int argc, char* argv[])
             viewmodelData["last"] =
                 (vmIndex == fileData.viewmodels.size() - 1);
 
+            std::vector<kainjow::mustache::data> instanceNames;
+            for (size_t instIndex = 0;
+                 instIndex < viewModel.instanceNames.size();
+                 instIndex++)
+            {
+                const auto& instName = viewModel.instanceNames[instIndex];
+                kainjow::mustache::data instData;
+                instData["instance_name"] = instName;
+                instData["instance_camel_case"] = toCamelCase(instName);
+                instData["instance_pascal_case"] = toPascalCase(instName);
+                instData["last"] =
+                    (instIndex == viewModel.instanceNames.size() - 1);
+                instanceNames.push_back(instData);
+            }
+            viewmodelData["instance_names"] = instanceNames;
+
             std::vector<kainjow::mustache::data> properties;
             for (size_t propIndex = 0;
                  propIndex < viewModel.properties.size();
@@ -965,6 +1556,8 @@ int main(int argc, char* argv[])
                     toSnakeCase(property.name);
                 propertyData["property_kebab_case"] =
                     toKebabCase(property.name);
+                propertyData["property_default_value"] = property.defaultValue;
+                propertyData.set("has_default_value", property.hasDefaultValue);
 
                 // Add property type information for the viewmodel template
                 kainjow::mustache::data propertyTypeData;
@@ -980,6 +1573,10 @@ int main(int argc, char* argv[])
                                        property.type == "boolean");
                 propertyTypeData.set("is_color", property.type == "color");
                 propertyTypeData.set("is_list", property.type == "list");
+                propertyTypeData.set("is_symbol_list_index",
+                                       property.type == "symbolListIndex");
+                propertyTypeData.set("is_asset_image",
+                                       property.type == "assetImage");
                 propertyTypeData.set("is_trigger",
                                        property.type == "trigger");
                 propertyTypeData.set("backing_name", property.backingName);
@@ -1017,6 +1614,10 @@ int main(int argc, char* argv[])
             assetData["asset_id"] = asset.assetId;
             assetData["asset_cdn_uuid"] = asset.cdnUuid;
             assetData["asset_cdn_base_url"] = asset.cdnBaseUrl;
+            assetData["asset_unique_filename"] = asset.uniqueFilename;
+            assetData.set("asset_is_embedded", asset.isEmbedded);
+            assetData["asset_width"] = formatNumber(asset.width);
+            assetData["asset_height"] = formatNumber(asset.height);
             assetData["last"] = (assetIndex == fileData.assets.size() - 1);
             assets.push_back(assetData);
         }
@@ -1035,6 +1636,30 @@ int main(int argc, char* argv[])
             artboardData["artboard_camel_case"] = artboard.artboardCameCase;
             artboardData["artboard_snake_case"] = artboard.artboardSnakeCase;
             artboardData["artboard_kebab_case"] = artboard.artboardKebabCase;
+            artboardData["artboard_width"] = formatNumber(artboard.width);
+            artboardData["artboard_height"] = formatNumber(artboard.height);
+            artboardData["artboard_origin_x"] = formatNumber(artboard.originX);
+            artboardData["artboard_origin_y"] = formatNumber(artboard.originY);
+            artboardData.set("artboard_clip", artboard.clip);
+
+            artboardData.set("has_default_state_machine",
+                             artboard.hasDefaultStateMachine);
+            artboardData["default_state_machine_name"] =
+                artboard.defaultStateMachineName;
+            artboardData["default_state_machine_camel_case"] =
+                toCamelCase(artboard.defaultStateMachineName);
+            artboardData["default_state_machine_pascal_case"] =
+                toPascalCase(artboard.defaultStateMachineName);
+
+            artboardData.set("has_bound_view_model",
+                             artboard.hasBoundViewModel);
+            artboardData["bound_view_model_name"] =
+                artboard.boundViewModelName;
+            artboardData["bound_view_model_camel_case"] =
+                toCamelCase(artboard.boundViewModelName);
+            artboardData["bound_view_model_pascal_case"] =
+                toPascalCase(artboard.boundViewModelName);
+
             artboardData["last"] =
                 (artboardIndex == fileData.artboards.size() - 1);
 
@@ -1045,12 +1670,17 @@ int main(int argc, char* argv[])
             {
                 const auto& animation = artboard.animations[animIndex];
                 kainjow::mustache::data animData;
-                auto uniqueName = makeUnique(animation, usedAnimationNames);
-                animData["animation_name"] = animation;
+                auto uniqueName = makeUnique(animation.name, usedAnimationNames);
+                animData["animation_name"] = animation.name;
                 animData["animation_camel_case"] = toCamelCase(uniqueName);
                 animData["animation_pascal_case"] = toPascalCase(uniqueName);
                 animData["animation_snake_case"] = toSnakeCase(uniqueName);
                 animData["animation_kebab_case"] = toKebabCase(uniqueName);
+                animData["animation_fps"] = std::to_string(animation.fps);
+                animData["animation_duration_seconds"] =
+                    formatNumber(animation.durationSeconds);
+                animData["animation_loop"] = animation.loop;
+                animData["animation_speed"] = formatNumber(animation.speed);
                 animData["last"] =
                     (animIndex == artboard.animations.size() - 1);
                 animations.push_back(animData);
@@ -1065,8 +1695,8 @@ int main(int argc, char* argv[])
                 const auto& stateMachine = artboard.stateMachines[smIndex];
                 kainjow::mustache::data stateMachineData;
                 auto uniqueName =
-                    makeUnique(stateMachine.first, usedStateMachineNames);
-                stateMachineData["state_machine_name"] = stateMachine.first;
+                    makeUnique(stateMachine.name, usedStateMachineNames);
+                stateMachineData["state_machine_name"] = stateMachine.name;
                 stateMachineData["state_machine_camel_case"] =
                     toCamelCase(uniqueName);
                 stateMachineData["state_machine_pascal_case"] =
@@ -1081,24 +1711,61 @@ int main(int argc, char* argv[])
                 std::unordered_set<std::string> usedInputNames;
                 std::vector<kainjow::mustache::data> inputs;
                 for (size_t inputIndex = 0;
-                     inputIndex < stateMachine.second.size();
+                     inputIndex < stateMachine.inputs.size();
                      inputIndex++)
                 {
-                    const auto& input = stateMachine.second[inputIndex];
+                    const auto& input = stateMachine.inputs[inputIndex];
                     kainjow::mustache::data inputData;
-                    auto uniqueName = makeUnique(input.name, usedInputNames);
+                    auto uniqueInputName =
+                        makeUnique(input.name, usedInputNames);
                     inputData["input_name"] = input.name;
-                    inputData["input_camel_case"] = toCamelCase(uniqueName);
-                    inputData["input_pascal_case"] = toPascalCase(uniqueName);
-                    inputData["input_snake_case"] = toSnakeCase(uniqueName);
-                    inputData["input_kebab_case"] = toKebabCase(uniqueName);
+                    inputData["input_camel_case"] = toCamelCase(uniqueInputName);
+                    inputData["input_pascal_case"] =
+                        toPascalCase(uniqueInputName);
+                    inputData["input_snake_case"] =
+                        toSnakeCase(uniqueInputName);
+                    inputData["input_kebab_case"] =
+                        toKebabCase(uniqueInputName);
                     inputData["input_type"] = input.type;
                     inputData["input_default_value"] = input.defaultValue;
                     inputData["last"] =
-                        (inputIndex == stateMachine.second.size() - 1);
+                        (inputIndex == stateMachine.inputs.size() - 1);
                     inputs.push_back(inputData);
                 }
                 stateMachineData["inputs"] = inputs;
+
+                std::unordered_set<std::string> usedStateNames;
+                std::vector<kainjow::mustache::data> states;
+                for (size_t stateIndex = 0;
+                     stateIndex < stateMachine.states.size();
+                     stateIndex++)
+                {
+                    const auto& state = stateMachine.states[stateIndex];
+                    kainjow::mustache::data stateData;
+                    auto uniqueStateName =
+                        makeUnique(toCamelCase(state.name), usedStateNames);
+                    stateData["state_name"] = state.name;
+                    stateData["state_camel_case"] = uniqueStateName;
+                    stateData["state_pascal_case"] = toPascalCase(state.name);
+                    stateData["state_type"] = state.type;
+
+                    std::vector<kainjow::mustache::data> transitions;
+                    for (size_t trIndex = 0;
+                         trIndex < state.transitions.size();
+                         trIndex++)
+                    {
+                        kainjow::mustache::data trData;
+                        trData["transition_to"] = state.transitions[trIndex];
+                        trData["last"] =
+                            (trIndex == state.transitions.size() - 1);
+                        transitions.push_back(trData);
+                    }
+                    stateData["transitions"] = transitions;
+                    stateData["last"] =
+                        (stateIndex == stateMachine.states.size() - 1);
+                    states.push_back(stateData);
+                }
+                stateMachineData["states"] = states;
 
                 stateMachines.push_back(stateMachineData);
             }
@@ -1125,6 +1792,18 @@ int main(int argc, char* argv[])
                 tvrData["text_value_run_default"] = tvr.defaultValue;
                 tvrData["text_value_run_default_sanitized"] =
                     sanitizeString(tvr.defaultValue);
+                tvrData["text_value_run_font_size"] =
+                    formatNumber(tvr.fontSize);
+                tvrData["text_value_run_line_height"] =
+                    formatNumber(tvr.lineHeight);
+                tvrData["text_value_run_letter_spacing"] =
+                    formatNumber(tvr.letterSpacing);
+                tvrData["text_value_run_font_asset_id"] = tvr.fontAssetId;
+                tvrData["text_value_run_align"] = tvr.align;
+                tvrData["text_value_run_vertical_align"] = tvr.verticalAlign;
+                tvrData["text_value_run_sizing"] = tvr.sizing;
+                tvrData["text_value_run_overflow"] = tvr.overflow;
+                tvrData["text_value_run_wrap"] = tvr.wrap;
                 tvrData["last"] =
                     (tvrIndex == artboard.textValueRuns.size() - 1);
                 textValueRuns.push_back(tvrData);
@@ -1147,6 +1826,65 @@ int main(int argc, char* argv[])
 
             artboardData["nested_text_value_runs"] = nestedTextValueRuns;
 
+            std::unordered_set<std::string> usedEventNames;
+            std::vector<kainjow::mustache::data> eventList;
+            for (size_t eventIndex = 0; eventIndex < artboard.events.size();
+                 eventIndex++)
+            {
+                const auto& event = artboard.events[eventIndex];
+                kainjow::mustache::data eventData;
+                auto uniqueName = makeUnique(event.name, usedEventNames);
+                eventData["event_name"] = event.name;
+                eventData["event_camel_case"] = toCamelCase(uniqueName);
+                eventData["event_pascal_case"] = toPascalCase(uniqueName);
+                eventData["event_snake_case"] = toSnakeCase(uniqueName);
+                eventData["event_kebab_case"] = toKebabCase(uniqueName);
+                eventData["event_type"] = event.type;
+                eventData.set("is_general", event.type == "general");
+                eventData.set("is_open_url", event.type == "openUrl");
+                eventData.set("is_audio", event.type == "audio");
+                eventData["event_url"] = event.url;
+                eventData["event_target"] = event.target;
+                eventData["event_asset_id"] = event.assetId;
+
+                std::unordered_set<std::string> usedEventPropNames;
+                std::vector<kainjow::mustache::data> eventProps;
+                for (size_t propIndex = 0;
+                     propIndex < event.properties.size();
+                     propIndex++)
+                {
+                    const auto& prop = event.properties[propIndex];
+                    kainjow::mustache::data propData;
+                    auto uniquePropName =
+                        makeUnique(prop.name, usedEventPropNames);
+                    propData["property_name"] = prop.name;
+                    propData["property_camel_case"] =
+                        toCamelCase(uniquePropName);
+                    propData["property_pascal_case"] =
+                        toPascalCase(uniquePropName);
+                    propData["property_snake_case"] =
+                        toSnakeCase(uniquePropName);
+                    propData["property_kebab_case"] =
+                        toKebabCase(uniquePropName);
+                    propData["property_type"] = prop.type;
+                    propData["property_default_value"] = prop.defaultValue;
+                    propData.set("is_number", prop.type == "number");
+                    propData.set("is_boolean", prop.type == "boolean");
+                    propData.set("is_string", prop.type == "string");
+                    propData.set("is_color", prop.type == "color");
+                    propData.set("is_enum", prop.type == "enum");
+                    propData.set("is_trigger", prop.type == "trigger");
+                    propData["last"] =
+                        (propIndex == event.properties.size() - 1);
+                    eventProps.push_back(propData);
+                }
+                eventData["properties"] = eventProps;
+                eventData["last"] =
+                    (eventIndex == artboard.events.size() - 1);
+                eventList.push_back(eventData);
+            }
+            artboardData["events"] = eventList;
+
             artboardList.push_back(artboardData);
         }
 
@@ -1155,6 +1893,10 @@ int main(int argc, char* argv[])
     }
 
     templateData["generated_file_name"] = generatedFileName;
+    templateData["runtime_major_version"] =
+        std::to_string(rive::File::majorVersion);
+    templateData["runtime_minor_version"] =
+        std::to_string(rive::File::minorVersion);
     templateData["riv_files"] = riveFileList;
 
     kainjow::mustache::mustache tmpl(templateStr);
@@ -1194,6 +1936,15 @@ int main(int argc, char* argv[])
                      console::pluralize(stats.assets, "asset"));
     console::summary("Done in " + timer.elapsedStr());
     console::blank();
+
+    // Signal failure to callers/CI if any input file failed to process.
+    if (stats.errors > 0)
+    {
+        console::error(
+            console::pluralize(stats.errors, "file") +
+            " failed to process");
+        return 1;
+    }
 
     return 0;
 }

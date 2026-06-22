@@ -1,0 +1,146 @@
+/**
+ * ⚠️ WARNING!
+ * This file is auto-generated. Do not edit it manually —
+ * any changes will be overwritten during the next generation.
+ */
+/* oxlint-disable */
+export {};
+
+import type { Colord } from 'colord';
+import type { Ref } from 'vue';
+
+type KeyByType<S, T> = {
+  [K in keyof S]: S[K] extends T ? K : never;
+}[keyof S];
+
+type ViewModelKeys<T> = {
+  [K in keyof T]: T[K] extends VueRive.ViewModel<any> ? K : never;
+}[keyof T];
+
+declare global {
+  export namespace VueRive {
+    export type Trigger = {
+      trigger: () => void;
+      on: (handler: () => void) => void;
+      off: (handler?: () => void) => void;
+    };
+
+    export type List<T = VueRive.UnknownViewModel> = {
+      length: number;
+      instanceAt: (index: number) => T;
+      addInstance: (instance: T) => void;
+      removeInstance: (instance: T) => void;
+    };
+
+    export interface ViewModel<T> {
+      number(path: KeyByType<T, number>): Ref<number>;
+      string(path: KeyByType<T, string>): Ref<string>;
+      boolean(path: KeyByType<T, boolean>): Ref<boolean>;
+      color(path: KeyByType<T, Ref<Colord>>): Ref<Colord>;
+      trigger(path: KeyByType<T, VueRive.Trigger>): VueRive.Trigger;
+      list<VM = VueRive.UnknownViewModel>(path: KeyByType<T, VueRive.List>): VueRive.List<VM>;
+      viewModel<K extends ViewModelKeys<T>>(path: K): T[K];
+      delete(): void;
+      unref(): void;
+      update(): void;
+    }
+
+    export interface UnknownViewModel {
+      number(path: string): Ref<number>;
+      string(path: string): Ref<string>;
+      boolean(path: string): Ref<boolean>;
+      color(path: string): Ref<Colord>;
+      trigger(path: string): VueRive.Trigger;
+      list<VM = VueRive.UnknownViewModel>(path: string): VueRive.List<VM>;
+      viewModel(path: string): VueRive.UnknownViewModel;
+      delete(): void;
+      unref(): void;
+      update(): void;
+    }
+  }
+
+  {{#riv_files}}
+  export namespace {{riv_pascal_case}}RiveFile {
+    {{#enums}}
+    export type {{enum_pascal_case}} = {{#enum_values}}"{{enum_value_key}}"{{^last}} | {{/last}}{{/enum_values}};
+    {{/enums}}
+    {{#view_models}}
+    export interface {{view_model_pascal_case}} {
+      {{#properties}}
+      "{{property_name}}": {{#property_type}}{{#is_view_model}}VueRive.ViewModel<{{riv_pascal_case}}RiveFile.{{backing_pascal_case}}>{{/is_view_model}}{{#is_enum}}{{riv_pascal_case}}RiveFile.{{backing_pascal_case}}{{/is_enum}}{{#is_list}}VueRive.List{{#backing_name}}<{{riv_pascal_case}}RiveFile.{{backing_pascal_case}}>{{/backing_name}}{{/is_list}}{{#is_integer}}number{{/is_integer}}{{#is_symbol_list_index}}number{{/is_symbol_list_index}}{{#is_asset_image}}unknown{{/is_asset_image}}{{#is_trigger}}VueRive.Trigger{{/is_trigger}}{{#is_color}}Ref<Colord>{{/is_color}}{{#is_string}}string{{/is_string}}{{#is_number}}number{{/is_number}}{{#is_boolean}}boolean{{/is_boolean}}{{/property_type}};
+      {{/properties}}
+    }
+    {{/view_models}}
+  }
+  {{/riv_files}}
+
+  type VueRiveFilesMeta = {
+    {{#riv_files}}
+    "{{riv_name}}.riv": {
+      viewModel: {
+        {{#view_models}}
+        "{{view_model_name}}": VueRive.ViewModel<{{riv_pascal_case}}RiveFile.{{view_model_pascal_case}}>;
+        {{/view_models}}
+      };
+      viewModelInstances: {
+        {{#view_models}}
+        "{{view_model_name}}": [{{#instance_names}}"{{instance_name}}"{{^last}}, {{/last}}{{/instance_names}}];
+        {{/view_models}}
+      };
+      enums: {
+        {{#enums}}
+        "{{enum_name}}": {{riv_pascal_case}}RiveFile.{{enum_pascal_case}};
+        {{/enums}}
+      };
+      assets: {
+        {{#assets}}
+        "{{asset_camel_case}}": { name: "{{asset_name}}"; type: "{{asset_type}}"; assetId: "{{asset_id}}"; width: {{asset_width}}; height: {{asset_height}}; isEmbedded: {{#asset_is_embedded}}true{{/asset_is_embedded}}{{^asset_is_embedded}}false{{/asset_is_embedded}}; uniqueFilename: "{{asset_unique_filename}}" };
+        {{/assets}}
+      };
+      artboards: {
+        {{#artboards}}
+        "{{artboard_camel_case}}": {
+          name: "{{artboard_name}}";
+          width: {{artboard_width}};
+          height: {{artboard_height}};
+          defaultStateMachine: {{#has_default_state_machine}}"{{default_state_machine_name}}"{{/has_default_state_machine}}{{^has_default_state_machine}}null{{/has_default_state_machine}};
+          boundViewModel: {{#has_bound_view_model}}"{{bound_view_model_name}}"{{/has_bound_view_model}}{{^has_bound_view_model}}null{{/has_bound_view_model}};
+          animations: {
+            {{#animations}}
+            "{{animation_camel_case}}": { name: "{{animation_name}}"; fps: {{animation_fps}}; durationSeconds: {{animation_duration_seconds}}; loop: "{{animation_loop}}"; speed: {{animation_speed}} };
+            {{/animations}}
+          };
+          stateMachines: {
+            {{#state_machines}}
+            "{{state_machine_camel_case}}": {
+              name: "{{state_machine_name}}";
+              inputs: {
+                {{#inputs}}
+                "{{input_camel_case}}": { name: "{{input_name}}"; type: "{{input_type}}"; defaultValue: "{{input_default_value}}" };
+                {{/inputs}}
+              };
+              states: {
+                {{#states}}
+                "{{state_camel_case}}": { name: "{{state_name}}"; type: "{{state_type}}"; transitions: [{{#transitions}}"{{transition_to}}"{{^last}}, {{/last}}{{/transitions}}] };
+                {{/states}}
+              };
+            };
+            {{/state_machines}}
+          };
+          events: {
+            {{#events}}
+            "{{event_camel_case}}": { name: "{{event_name}}"; type: "{{event_type}}" };
+            {{/events}}
+          };
+          textRuns: {
+            {{#text_value_runs}}
+            "{{text_value_run_camel_case}}": { name: "{{text_value_run_name}}"; fontSize: {{text_value_run_font_size}}; align: "{{text_value_run_align}}"; verticalAlign: "{{text_value_run_vertical_align}}"; sizing: "{{text_value_run_sizing}}"; overflow: "{{text_value_run_overflow}}"; wrap: "{{text_value_run_wrap}}" };
+            {{/text_value_runs}}
+          };
+        };
+        {{/artboards}}
+      };
+    };
+    {{/riv_files}}
+  };
+}
