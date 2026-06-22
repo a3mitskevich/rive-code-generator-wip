@@ -82,6 +82,11 @@ declare global {
         "{{view_model_name}}": VueRive.ViewModel<{{riv_pascal_case}}RiveFile.{{view_model_pascal_case}}>;
         {{/view_models}}
       };
+      viewModelInstances: {
+        {{#view_models}}
+        "{{view_model_name}}": [{{#instance_names}}"{{instance_name}}"{{^last}}, {{/last}}{{/instance_names}}];
+        {{/view_models}}
+      };
       enums: {
         {{#enums}}
         "{{enum_name}}": {{riv_pascal_case}}RiveFile.{{enum_pascal_case}};

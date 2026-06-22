@@ -1398,14 +1398,18 @@ int main(int argc, char* argv[])
     std::vector<RiveFileData> riveFileDataList;
     for (const auto& riv_file : riveFiles)
     {
+        // Print the file name BEFORE parsing so any warnings emitted by the
+        // runtime importer (e.g. duplicate asset content, written to stderr)
+        // are clearly attributed to the file currently being processed.
+        std::filesystem::path p(riv_file);
+        console::step(p.filename().string());
+
         auto result = processRiveFile(riv_file);
         if (result)
         {
             riveFileDataList.push_back(*result);
 
             const auto& fd = *result;
-            std::filesystem::path p(riv_file);
-            console::step(p.filename().string());
 
             int numArtboards = (int)fd.artboards.size();
             int numAnimations = 0;
